@@ -425,16 +425,39 @@
       }
     ];
 
-    /* ========== FIREBASE (Demo config) ========== */
-    const firebaseConfig = {
-      apiKey: "AIzaSyDemoKeyForExample123456789",
-      authDomain: "cannabis-tracker.firebaseapp.com",
-      databaseURL: "https://cannabis-tracker-default-rtdb.firebaseio.com",
-      projectId: "cannabis-tracker",
-      storageBucket: "cannabis-tracker.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abcdef123456"
-    };
+/* ========== FIREBASE (Your real config) ========== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDz_A0yGCoOQSw7PoZ3dvO8v9I8zkL1tBE",
+  authDomain: "panda-canabis.firebaseapp.com",
+  databaseURL: "https://panda-canabis-default-rtdb.firebaseio.com", // ← חשוב! הוספתי את זה
+  projectId: "panda-canabis",
+  storageBucket: "panda-canabis.firebasestorage.app",
+  messagingSenderId: "1032875974338",
+  appId: "1:1032875974338:web:022576260c3c066d78a55b"
+};
+
+let db = null;
+let userKey = null;
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  userKey = localStorage.getItem('userKey');
+  if(!userKey){
+    userKey = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2,9);
+    localStorage.setItem('userKey', userKey);
+  }
+  updateSyncStatus('synced','מסונכרן ✓');
+  console.log('Firebase initialized. userKey:',userKey);
+  
+  // טען נתונים מהענן
+  loadData();
+} catch(err){
+  console.warn('Firebase init failed, running in local-only mode.',err);
+  updateSyncStatus('offline','מצב מקומי (לא מחובר)');
+  loadFromLocalStorage();
+  renderStrains();
+}
 
     let db = null;
     let userKey = null;
@@ -948,4 +971,5 @@
     });
   </script>
 </body>
+
 </html>
