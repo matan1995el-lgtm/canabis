@@ -1,1122 +1,951 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌿 מערכת ניהול קנאביס רפואי - גרסה מושלמת</title>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- Firebase for Cloud Sync -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🌿 מערכת ניהול קנאביס רפואי</title>
 
-        :root {
-            --primary: #66bb6a;
-            --primary-dark: #57a85a;
-            --bg-main: #f8faf9;
-            --bg-card: #ffffff;
-            --bg-accent: #e8f5e9;
-            --text-main: #1a3a2a;
-            --text-secondary: #4a6b5a;
-            --border: #c8e6c9;
-            --shadow: rgba(0, 0, 0, 0.1);
-            --indica: #9c27b0;
-            --sativa: #ff9800;
-            --hybrid: #2196f3;
-        }
+  <!-- Fonts & libs -->
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
-        body {
-            font-family: 'Heebo', sans-serif;
-            background: var(--bg-main);
-            color: var(--text-main);
-            padding: 20px;
-        }
+  <style>
+    /* ---------- ROOT & THEME ---------- */
+    :root{
+      --primary:#66bb6a;
+      --primary-dark:#57a85a;
+      --accent:#42a5f5;
+      --bg-main:#f8faf9;
+      --bg-card:#ffffff;
+      --bg-accent:#e8f5e9;
+      --text-main:#1a3a2a;
+      --text-secondary:#4a6b5a;
+      --muted:#7b8b80;
+      --border:#c8e6c9;
+      --shadow: rgba(0,0,0,0.08);
+      --danger:#f44336;
+      --glass: rgba(255,255,255,0.6);
+      --card-radius:16px;
+      --focus-ring: 0 0 0 4px rgba(102,187,106,0.15);
+    }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+    /* Dark mode variables */
+    .dark {
+      --bg-main:#0f1720;
+      --bg-card:#0b1220;
+      --bg-accent:#071116;
+      --text-main:#e6f0ea;
+      --text-secondary:#bcd4c6;
+      --border: rgba(255,255,255,0.06);
+      --shadow: rgba(0,0,0,0.6);
+      --glass: rgba(255,255,255,0.03);
+    }
 
-        h1 {
-            text-align: center;
-            color: var(--primary);
-            margin-bottom: 10px;
-            font-size: 2.5rem;
-        }
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:'Heebo',sans-serif;
+      background:linear-gradient(180deg,var(--bg-main), #f0f6f2 400px);
+      color:var(--text-main);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
 
-        .subtitle {
-            text-align: center;
-            color: var(--text-secondary);
-            margin-bottom: 30px;
-        }
+    .container{
+      max-width:1400px;
+      margin:24px auto;
+      padding:16px;
+    }
 
-        /* SYNC STATUS */
-        .sync-status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--bg-card);
-            padding: 10px 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px var(--shadow);
-            font-size: 0.9rem;
-            z-index: 1000;
-        }
+    h1{ text-align:center; color:var(--primary); font-size:2.4rem; margin-bottom:6px; }
+    .subtitle{ text-align:center; color:var(--text-secondary); margin-bottom:20px; }
 
-        .sync-status.synced { color: #4caf50; }
-        .sync-status.syncing { color: #ff9800; }
-        .sync-status.offline { color: #f44336; }
+    /* ---------- SYNC STATUS & ANIM ---------- */
+    .sync-status{
+      position:fixed;
+      top:20px;
+      right:20px;
+      background:var(--bg-card);
+      padding:10px 16px;
+      border-radius:12px;
+      box-shadow:0 6px 20px var(--shadow);
+      font-size:0.95rem;
+      color:var(--muted);
+      display:flex;
+      gap:8px;
+      align-items:center;
+      z-index:1000;
+      transition:transform .25s ease, opacity .25s ease;
+    }
+    .sync-dot{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+    .sync-status.synced .sync-dot{ background: #4caf50; box-shadow:0 0 8px rgba(76,175,80,0.3); }
+    .sync-status.syncing .sync-dot{ background: #ff9800; animation: pulse 1.2s infinite; box-shadow:0 0 12px rgba(255,152,0,0.25); }
+    .sync-status.offline .sync-dot{ background: #f44336; }
 
-        /* TABS */
-        .tabs {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
+    @keyframes pulse{
+      0%{ transform: scale(1); opacity:1; }
+      50%{ transform: scale(1.25); opacity:.6; }
+      100%{ transform: scale(1); opacity:1; }
+    }
 
-        .tab-btn {
-            padding: 12px 24px;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
+    /* ---------- TABS ---------- */
+    .tabs{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:22px; }
+    .tab-btn{
+      padding:10px 18px;
+      border-radius:12px;
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      cursor:pointer;
+      font-weight:600;
+      transition:all .18s ease;
+      color:var(--text-main);
+    }
+    .tab-btn:hover{ transform:translateY(-4px); box-shadow:0 6px 18px rgba(0,0,0,0.06); }
+    .tab-btn.active{ background:linear-gradient(90deg,var(--primary),var(--primary-dark)); color:#fff; border-color:transparent; box-shadow:0 8px 30px rgba(102,187,106,0.18); }
 
-        .tab-btn:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
+    /* ---------- CARD ---------- */
+    .card{
+      background:var(--bg-card);
+      border-radius:var(--card-radius);
+      padding:18px;
+      margin-bottom:18px;
+      box-shadow:0 6px 26px var(--shadow);
+      border:1px solid transparent;
+    }
+    .card h2{ color:var(--primary); margin:0 0 12px 0; }
 
-        .tab-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
+    /* ---------- BUTTONS ---------- */
+    .btn{
+      font-family:'Heebo',sans-serif;
+      border:none;
+      border-radius:10px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:600;
+      transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn:focus{ outline:none; box-shadow:var(--focus-ring); }
+    .btn-primary{ background:var(--primary); color:#fff; box-shadow:0 6px 18px rgba(102,187,106,0.18); }
+    .btn-primary:hover{ transform:translateY(-3px); background:var(--primary-dark); }
+    .btn-secondary{ background:#757575; color:#fff; }
+    .btn-danger{ background:var(--danger); color:#fff; }
+    .btn-small{ padding:6px 10px; font-size:0.9rem; border-radius:8px; }
 
-        .tab-content {
-            display: none;
-        }
+    /* Import/export animations */
+    .btn-import{ background:linear-gradient(90deg,#4fc3f7,#42a5f5); box-shadow:0 10px 24px rgba(66,165,245,0.18); }
+    .btn-export{ background:linear-gradient(90deg,#ffd54f,#ffb74d); box-shadow:0 10px 24px rgba(255,183,77,0.12); }
+    .btn-import:hover, .btn-export:hover{ transform:translateY(-3px) scale(1.01); }
 
-        .tab-content.active {
-            display: block;
-        }
+    /* ---------- FORM ---------- */
+    .form-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; margin-bottom:12px; }
+    label{ font-weight:600; color:var(--text-secondary); margin-bottom:6px; font-size:0.95rem; }
+    input,select,textarea{
+      padding:12px; border-radius:10px; border:2px solid var(--border); font-size:1rem; background:transparent; color:var(--text-main);
+      transition:box-shadow .12s ease, border-color .12s ease;
+    }
+    input:focus,select:focus,textarea:focus{ border-color:var(--primary); box-shadow:var(--focus-ring); outline:none; }
 
-        /* CARDS */
-        .card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 20px var(--shadow);
-        }
+    textarea{ min-height:90px; resize:vertical; }
 
-        .card h2 {
-            color: var(--primary);
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
+    /* pharmacies tags */
+    .pharmacies-list{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .pharmacy-tag{ background:var(--primary); color:#fff; padding:6px 12px; border-radius:18px; display:flex; gap:8px; align-items:center; }
 
-        /* BUTTONS */
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Heebo', sans-serif;
-        }
+    /* ---------- TABLE ---------- */
+    table{ width:100%; border-collapse:collapse; }
+    th,td{ padding:12px; text-align:right; border-bottom:1px solid var(--border); font-size:0.95rem; }
+    th{ background:var(--bg-accent); color:var(--primary); position:sticky; top:0; z-index:1; }
+    tbody tr:hover{ background:linear-gradient(90deg, rgba(102,187,106,0.04), transparent); transform:translateX(0); }
 
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
+    .strain-type{ display:inline-block; padding:6px 12px; border-radius:12px; color:#fff; font-weight:700; }
+    .type-indica{ background:#9c27b0; }
+    .type-sativa{ background:#ff9800; }
+    .type-hybrid{ background:#2196f3; }
 
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
+    /* ---------- NOTIFICATION ---------- */
+    .notification{
+      position:fixed; top:18px; left:50%; transform:translateX(-50%); background:var(--primary); color:#fff; padding:12px 20px; border-radius:12px; box-shadow:0 8px 30px var(--shadow); z-index:20000; animation:slideDown .28s ease;
+    }
+    @keyframes slideDown{ from{ transform:translate(-50%,-40px); opacity:0 } to{ transform:translate(-50%,0); opacity:1 } }
 
-        .btn-secondary {
-            background: #757575;
-            color: white;
-        }
+    .empty-state{ text-align:center; padding:40px; color:var(--text-secondary); }
 
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 0.9rem;
-        }
+    /* ---------- STATS CARDS & CHART ---------- */
+    .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-top:12px; }
+    .stat-card{ background:linear-gradient(180deg,var(--bg-accent), rgba(255,255,255,0.6)); padding:16px; border-radius:12px; text-align:center; box-shadow:0 8px 26px rgba(0,0,0,0.04); }
+    .stat-value{ font-size:2.2rem; font-weight:800; color:var(--primary); }
+    .stat-label{ color:var(--text-secondary); margin-top:8px; font-weight:600; }
 
-        .btn-danger {
-            background: #f44336;
-            color: white;
-        }
+    /* Chart container */
+    #thcCbdChart{ max-width:720px; margin:0 auto; padding:14px; background:linear-gradient(180deg, rgba(255,255,255,0.6), transparent); border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.06); border:1px solid var(--border); }
 
-        /* MODAL */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+    /* ---------- MODAL ---------- */
+    .modal{ display:none; position:fixed; inset:0; background:rgba(3,8,5,0.55); z-index:10000; align-items:center; justify-content:center; padding:20px; }
+    .modal.active{ display:flex; }
+    .modal-content{ background:var(--bg-card); border-radius:16px; padding:22px; width:100%; max-width:960px; max-height:92vh; overflow:auto; box-shadow:0 16px 48px var(--shadow); }
+    .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .close-modal{ background:none; border:none; font-size:28px; cursor:pointer; color:var(--text-secondary); }
 
-        .modal.active {
-            display: flex !important;
-        }
+    /* ---------- ACCESSIBILITY ---------- */
+    .sr-only{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+    :focus{ outline:none; box-shadow:var(--focus-ring); border-radius:8px; }
 
-        .modal-content {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 900px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-header h2 {
-            color: var(--primary);
-            margin: 0;
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 32px;
-            cursor: pointer;
-            color: var(--text-secondary);
-            width: 40px;
-            height: 40px;
-            padding: 0;
-        }
-
-        /* FORM */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        input, select, textarea {
-            padding: 12px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: 'Heebo', sans-serif;
-            background: var(--bg-main);
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        /* PHARMACIES */
-        .pharmacy-input-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .pharmacy-input-group input {
-            flex: 1;
-        }
-
-        .pharmacies-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .pharmacy-tag {
-            background: var(--primary);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .pharmacy-tag button {
-            background: rgba(255, 255, 255, 0.3);
-            border: none;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        /* TABLE */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: right;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            background: var(--bg-accent);
-            font-weight: 600;
-            color: var(--primary);
-            position: sticky;
-            top: 0;
-        }
-
-        tbody tr:hover {
-            background: var(--bg-accent);
-        }
-
-        .strain-type {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: white;
-        }
-
-        .type-indica { background: var(--indica); }
-        .type-sativa { background: var(--sativa); }
-        .type-hybrid { background: var(--hybrid); }
-
-        /* NOTIFICATION */
-        .notification {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--primary);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px var(--shadow);
-            z-index: 20000;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from { transform: translate(-50%, -100%); opacity: 0; }
-            to { transform: translate(-50%, 0); opacity: 1; }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
-        }
-
-        /* STATS GRID */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .stat-card {
-            background: var(--bg-accent);
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            color: var(--text-secondary);
-            margin-top: 8px;
-        }
-    </style>
+    /* responsive tweaks */
+    @media (max-width:720px){
+      h1{ font-size:1.6rem; }
+      .tabs{ gap:6px; }
+      .form-grid{ grid-template-columns:1fr; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🌿 מערכת ניהול קנאביס רפואי</h1>
-        <p class="subtitle">נהל, עקוב והשווה בין זני קנאביס רפואי - מסונכרן בענן 🔄</p>
+  <div class="container" role="main">
+    <h1>🌿 מערכת ניהול קנאביס רפואי</h1>
+    <p class="subtitle">נהל, עקוב והשווה בין זני קנאביס רפואי - מסונכרן בענן 🔄</p>
 
-        <!-- SYNC STATUS -->
-        <div id="syncStatus" class="sync-status offline">
-            ● מצב: לא מחובר
-        </div>
-
-        <!-- TABS -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('manage')">📊 ניהול זנים</button>
-            <button class="tab-btn" onclick="switchTab('stats')">📈 סטטיסטיקות</button>
-            <button class="tab-btn" onclick="switchTab('search')">🔍 חיפוש</button>
-            <button class="tab-btn" onclick="switchTab('settings')">⚙️ הגדרות</button>
-        </div>
-
-        <!-- TAB 1: MANAGE -->
-        <div id="manageTab" class="tab-content active">
-            <div class="card">
-                <h2>➕ הוסף זן חדש</h2>
-                <button class="btn btn-primary" onclick="openAddModal()">פתח טופס הוספה מלא</button>
-            </div>
-
-            <div class="card">
-                <h2>📋 רשימת זנים</h2>
-                <div id="strainsList"></div>
-            </div>
-        </div>
-
-        <!-- TAB 2: STATS -->
-        <div id="statsTab" class="tab-content">
-            <div class="card">
-                <h2>📈 סטטיסטיקות מתקדמות</h2>
-                <div id="statsContent"></div>
-            </div>
-        </div>
-
-        <!-- TAB 3: SEARCH -->
-        <div id="searchTab" class="tab-content">
-            <div class="card">
-                <h2>🔍 חיפוש מתקדם</h2>
-                <input type="text" id="searchInput" placeholder="חפש לפי שם, טרפנים, השפעה..." style="width: 100%; margin-bottom: 20px;">
-                <button class="btn btn-primary" onclick="performSearch()">חפש</button>
-                <div id="searchResults" style="margin-top: 20px;"></div>
-            </div>
-        </div>
-
-        <!-- TAB 4: SETTINGS -->
-        <div id="settingsTab" class="tab-content">
-            <div class="card">
-                <h2>⚙️ הגדרות וסנכרון</h2>
-                
-                <h3 style="margin: 20px 0 10px 0;">☁️ סנכרון ענן</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 10px;">המערכת מסתנכרנת אוטומטית בין כל המכשירים שלך</p>
-                <button class="btn btn-primary" onclick="forceSyncNow()">🔄 סנכרן עכשיו</button>
-                
-                <h3 style="margin: 30px 0 10px 0;">📤 שיתוף וגיבוי</h3>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" onclick="shareWhatsApp()">📱 WhatsApp</button>
-                    <button class="btn btn-primary" onclick="shareEmail()">📧 Email</button>
-                    <button class="btn btn-primary" onclick="copyLink()">📋 העתק קישור</button>
-                    <button class="btn btn-secondary" onclick="exportData()">💾 ייצוא JSON</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 ייבוא</button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
-                </div>
-
-                <h3 style="margin: 30px 0 10px 0;">🗑️ ניהול נתונים</h3>
-                <button class="btn btn-danger" onclick="clearAllData()">מחק את כל הנתונים</button>
-            </div>
-        </div>
+    <!-- sync status -->
+    <div id="syncStatus" class="sync-status offline" aria-live="polite" role="status">
+      <span class="sync-dot"></span>
+      <span id="syncText">● מצב: לא מחובר</span>
     </div>
 
-    <!-- MODAL: ADD STRAIN -->
-    <div id="addStrainModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>➕ הוסף זן חדש</h2>
-                <button class="close-modal" onclick="closeAddModal()">×</button>
-            </div>
-            
-            <form id="addStrainForm" onsubmit="addStrain(event)">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>שם הזן *</label>
-                        <input type="text" id="strainName" required placeholder="לדוגמה: Blue Dream">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>אפיון *</label>
-                        <select id="strainType" required>
-                            <option value="">בחר אפיון</option>
-                            <option value="indica">Indica - אינדיקה</option>
-                            <option value="sativa">Sativa - סאטיבה</option>
-                            <option value="hybrid">Hybrid - הייבריד</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>עוצמה</label>
-                        <select id="strainPotency">
-                            <option value="">בחר עוצמה</option>
-                            <option value="נמוכה">נמוכה</option>
-                            <option value="בינונית">בינונית</option>
-                            <option value="מאוזנת">מאוזנת</option>
-                            <option value="גבוהה">גבוהה</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>מחיר (₪)</label>
-                        <input type="number" id="strainPrice" step="1" min="0" placeholder="350">
-                    </div>
-
-                    <div class="form-group">
-                        <label>מינון מומלץ</label>
-                        <input type="text" id="strainDosage" placeholder="0.2-0.5 גרם">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>THC %</label>
-                        <input type="number" id="strainTHC" step="0.1" min="0" max="100" placeholder="18.5">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>CBD %</label>
-                        <input type="number" id="strainCBD" step="0.1" min="0" max="100" placeholder="0.8">
-                    </div>
-
-                    <div class="form-group">
-                        <label>מדינת גידול</label>
-                        <input type="text" id="strainCountry" placeholder="קנדה, הולנד, ישראל...">
-                    </div>
-
-                    <div class="form-group">
-                        <label>חברת יבוא</label>
-                        <input type="text" id="strainImporter" placeholder="טוקן, בי.או.אל...">
-                    </div>
-
-                    <div class="form-group">
-                        <label>טרפנים עיקריים</label>
-                        <input type="text" id="strainTerpenes" placeholder="Myrcene, Limonene, Pinene">
-                    </div>
-
-                    <div class="form-group">
-                        <label>דירוג אישי</label>
-                        <select id="strainRating">
-                            <option value="">בחר דירוג</option>
-                            <option value="1">⭐</option>
-                            <option value="2">⭐⭐</option>
-                            <option value="3">⭐⭐⭐</option>
-                            <option value="4">⭐⭐⭐⭐</option>
-                            <option value="5">⭐⭐⭐⭐⭐</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>השפעה/שימוש רפואי</label>
-                    <textarea id="strainEffects" placeholder="מתאים לכאבים, הרפיה, שינה..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>בתי מרקחת זמינים</label>
-                    <div class="pharmacy-input-group">
-                        <input type="text" id="pharmacyInput" placeholder="הזן שם בית מרקחת">
-                        <button type="button" class="btn btn-secondary btn-small" onclick="addPharmacy()">הוסף</button>
-                    </div>
-                    <div class="pharmacies-list" id="pharmaciesList"></div>
-                </div>
-
-                <div class="form-group">
-                    <label>הערות</label>
-                    <textarea id="strainNotes" rows="3" placeholder="הערות כלליות על הזן..."></textarea>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-primary">💾 שמור זן</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeAddModal()">ביטול</button>
-                </div>
-            </form>
-        </div>
+    <!-- tabs -->
+    <div class="tabs" role="tablist" aria-label="ניווט ראשי">
+      <button class="tab-btn active" onclick="switchTab('manage')" role="tab" aria-selected="true">📊 ניהול זנים</button>
+      <button class="tab-btn" onclick="switchTab('stats')" role="tab">📈 סטטיסטיקות</button>
+      <button class="tab-btn" onclick="switchTab('search')" role="tab">🔍 חיפוש</button>
+      <button class="tab-btn" onclick="switchTab('settings')" role="tab">⚙️ הגדרות</button>
     </div>
 
-    <script>
-        // ===== FIREBASE CONFIG =====
-        const firebaseConfig = {
-            apiKey: "AIzaSyDemoKeyForExample123456789",
-            authDomain: "cannabis-tracker.firebaseapp.com",
-            databaseURL: "https://cannabis-tracker-default-rtdb.firebaseio.com",
-            projectId: "cannabis-tracker",
-            storageBucket: "cannabis-tracker.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef123456"
-        };
+    <!-- MANAGE TAB -->
+    <div id="manageTab" class="tab-content active" role="tabpanel">
+      <div class="card">
+        <h2>➕ הוסף זן חדש</h2>
+        <button class="btn btn-primary" onclick="openAddModal()" aria-haspopup="dialog">פתח טופס הוספה מלא</button>
+      </div>
 
-        let db = null;
-        let userKey = null;
+      <div class="card" aria-live="polite">
+        <h2>📋 רשימת זנים</h2>
+        <div id="strainsList" tabindex="0"></div>
+      </div>
+    </div>
 
-        // Initialize Firebase
+    <!-- STATS TAB -->
+    <div id="statsTab" class="tab-content" role="tabpanel" aria-hidden="true">
+      <div class="card">
+        <h2>📈 סטטיסטיקות מתקדמות</h2>
+        <canvas id="thcCbdChart" height="140" role="img" aria-label="גרף ממוצע THC ו CBD"></canvas>
+        <div id="statsContent" class="stats-grid" style="margin-top:16px;"></div>
+      </div>
+    </div>
+
+    <!-- SEARCH TAB -->
+    <div id="searchTab" class="tab-content" role="tabpanel" aria-hidden="true">
+      <div class="card">
+        <h2>🔍 חיפוש מתקדם</h2>
+        <label for="searchInput" class="sr-only">חיפוש זנים</label>
+        <input type="text" id="searchInput" placeholder="חפש לפי שם, טרפנים, השפעה..." style="width:100%; margin-bottom:12px;">
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
+          <button class="btn btn-primary" onclick="performSearch()">חפש</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('searchInput').value=''; document.getElementById('searchResults').innerHTML='';">נקה</button>
+        </div>
+        <div id="searchResults"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div id="settingsTab" class="tab-content" role="tabpanel" aria-hidden="true">
+      <div class="card">
+        <h2>⚙️ הגדרות וסנכרון</h2>
+
+        <h3 style="margin-top:6px;">☁️ סנכרון ענן</h3>
+        <p style="color:var(--text-secondary); margin-bottom:8px;">המערכת יכולה לסנכרן לעתים קרובות עם Firebase</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button class="btn btn-primary" onclick="forceSyncNow()">🔄 סנכרן עכשיו</button>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <label for="toggleDark" style="font-weight:600; color:var(--text-secondary);">מצב כהה</label>
+            <input id="toggleDark" type="checkbox" aria-label="הפעל מצב כהה" onchange="toggleDarkMode(event)">
+          </div>
+        </div>
+
+        <h3 style="margin-top:18px;">📤 שיתוף וגיבוי</h3>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+          <button class="btn btn-primary" onclick="shareWhatsApp()">📱 WhatsApp</button>
+          <button class="btn btn-primary" onclick="shareEmail()">📧 Email</button>
+          <button class="btn btn-primary" onclick="copyLink()">📋 העתק קישור</button>
+          <button class="btn btn-export" onclick="exportData()">💾 ייצוא JSON</button>
+          <button class="btn btn-import" onclick="document.getElementById('importFile').click()">📥 ייבוא</button>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        </div>
+
+        <h3 style="margin-top:18px;">🗑️ ניהול נתונים</h3>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-danger" onclick="clearAllData()">מחק את כל הנתונים</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD STRAIN MODAL -->
+  <div id="addStrainModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content" role="document">
+      <div class="modal-header">
+        <h2>➕ הוסף זן חדש</h2>
+        <button class="close-modal" onclick="closeAddModal()" aria-label="סגור">×</button>
+      </div>
+      <form id="addStrainForm" onsubmit="addStrain(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="strainName">שם הזן *</label>
+            <input id="strainName" type="text" required placeholder="לדוגמה: Blue Dream">
+          </div>
+
+          <div class="form-group">
+            <label for="strainType">אפיון *</label>
+            <select id="strainType" required>
+              <option value="">בחר אפיון</option>
+              <option value="indica">Indica - אינדיקה</option>
+              <option value="sativa">Sativa - סאטיבה</option>
+              <option value="hybrid">Hybrid - הייבריד</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="strainPotency">עוצמה</label>
+            <select id="strainPotency">
+              <option value="">בחר עוצמה</option>
+              <option value="נמוכה">נמוכה</option>
+              <option value="בינונית">בינונית</option>
+              <option value="מאוזנת">מאוזנת</option>
+              <option value="גבוהה">גבוהה</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="strainPrice">מחיר (₪)</label>
+            <input id="strainPrice" type="number" step="1" min="0" placeholder="350">
+          </div>
+
+          <div class="form-group">
+            <label for="strainDosage">מינון מומלץ</label>
+            <input id="strainDosage" type="text" placeholder="0.2-0.5 גרם">
+          </div>
+
+          <div class="form-group">
+            <label for="strainTHC">THC %</label>
+            <input id="strainTHC" type="number" step="0.1" min="0" max="100" placeholder="18.5">
+          </div>
+
+          <div class="form-group">
+            <label for="strainCBD">CBD %</label>
+            <input id="strainCBD" type="number" step="0.1" min="0" max="100" placeholder="0.8">
+          </div>
+
+          <div class="form-group">
+            <label for="strainCountry">מדינת גידול</label>
+            <input id="strainCountry" type="text" placeholder="קנדה, הולנד, ישראל...">
+          </div>
+
+          <div class="form-group">
+            <label for="strainImporter">חברת יבוא</label>
+            <input id="strainImporter" type="text" placeholder="טוקן, בי.או.אל...">
+          </div>
+
+          <div class="form-group">
+            <label for="strainTerpenes">טרפנים עיקריים</label>
+            <input id="strainTerpenes" type="text" placeholder="Myrcene, Limonene, Pinene">
+          </div>
+
+          <div class="form-group">
+            <label for="strainRating">דירוג אישי</label>
+            <select id="strainRating">
+              <option value="">בחר דירוג</option>
+              <option value="1">⭐</option>
+              <option value="2">⭐⭐</option>
+              <option value="3">⭐⭐⭐</option>
+              <option value="4">⭐⭐⭐⭐</option>
+              <option value="5">⭐⭐⭐⭐⭐</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="strainEffects">השפעה/שימוש רפואי</label>
+          <textarea id="strainEffects" placeholder="מתאים לכאבים, הרפיה, שינה..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>בתי מרקחת זמינים</label>
+          <div class="pharmacy-input-group" style="display:flex; gap:8px;">
+            <input id="pharmacyInput" type="text" placeholder="הזן שם בית מרקחת">
+            <button type="button" class="btn btn-secondary btn-small" onclick="addPharmacy()">הוסף</button>
+          </div>
+          <div class="pharmacies-list" id="pharmaciesList"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="strainNotes">הערות</label>
+          <textarea id="strainNotes" rows="3" placeholder="הערות כלליות על הזן..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:12px;">
+          <button type="submit" class="btn btn-primary">💾 שמור זן</button>
+          <button type="button" class="btn btn-secondary" onclick="closeAddModal()">ביטול</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /* ========== DATA & SAMPLE ========== */
+    let strains = [];
+    let currentPharmacies = [];
+
+    const SAMPLE_DATA = [
+      {
+        id:101, name:"Blue Dream", type:"hybrid", potency:"מאוזנת", price:380,
+        dosage:"0.2-0.5 גרם", thc:18.5, cbd:0.8, country:"ארה\"ב", importer:"טוקן",
+        terpenes:"Myrcene, Pinene, Caryophyllene", effects:"מעולה לשימוש יומיומי, משלב אנרגיה והרפיה.", rating:5,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"זן פופולרי מאוד", createdAt:"2025-11-19T00:00:00Z"
+      },
+      {
+        id:102, name:"Northern Lights", type:"indica", potency:"גבוהה", price:420,
+        dosage:"0.1-0.3 גרם", thc:22.0, cbd:0.3, country:"הולנד", importer:"בי.או.אל",
+        terpenes:"Myrcene, Linalool, Pinene", effects:"מרגיע מאוד, מתאים לשינה.", rating:4,
+        pharmacies:["ניו-פארם"], notes:"זן אינדיקה קלאסי", createdAt:"2025-11-19T00:01:00Z"
+      },
+      {
+        id:103, name:"Sour Diesel", type:"sativa", potency:"גבוהה", price:350,
+        dosage:"0.2-0.4 גרם", thc:20.1, cbd:0.2, country:"הולנד", importer:"IMC",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"אנרגיה, יצירתיות", rating:4,
+        pharmacies:["טבע אנד סאן"], notes:"זן סאטיבה אנרגטי", createdAt:"2025-11-19T00:02:00Z"
+      }
+    ];
+
+    /* ========== FIREBASE (Demo config) ========== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDemoKeyForExample123456789",
+      authDomain: "cannabis-tracker.firebaseapp.com",
+      databaseURL: "https://cannabis-tracker-default-rtdb.firebaseio.com",
+      projectId: "cannabis-tracker",
+      storageBucket: "cannabis-tracker.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef123456"
+    };
+
+    let db = null;
+    let userKey = null;
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      userKey = localStorage.getItem('userKey');
+      if(!userKey){
+        userKey = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2,9);
+        localStorage.setItem('userKey', userKey);
+      }
+      updateSyncStatus('synced','מסונכרן ✓');
+      console.log('Firebase initialized. userKey:',userKey);
+    } catch(err){
+      console.warn('Firebase init failed, running in local-only mode.',err);
+      updateSyncStatus('offline','מצב מקומי (לא מחובר)');
+    }
+
+    /* ========== UTILs ========== */
+    function updateSyncStatus(status, text){
+      const s = document.getElementById('syncStatus');
+      const t = document.getElementById('syncText');
+      if(s) {
+        s.className = `sync-status ${status}`;
+        if(t) t.textContent = `● ${text}`;
+      }
+    }
+
+    function showNotification(message){
+      const note = document.createElement('div');
+      note.className = 'notification';
+      note.textContent = message;
+      document.body.appendChild(note);
+      setTimeout(()=> note.style.opacity = '0', 2600);
+      setTimeout(()=> note.remove(), 3000);
+    }
+
+    /* ========== SAVE / LOAD ========== */
+    function saveData(){
+      localStorage.setItem('cannabisStrains', JSON.stringify(strains));
+      if(db && userKey){
+        updateSyncStatus('syncing','מסנכרן...');
         try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-            
-            // Generate or get user key
-            userKey = localStorage.getItem('userKey');
-            if (!userKey) {
-                userKey = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('userKey', userKey);
-            }
-            
-            updateSyncStatus('synced', 'מסונכרן ✓');
-            console.log('✅ Firebase initialized with key:', userKey);
-        } catch (error) {
-            console.warn('⚠️ Firebase not available, using localStorage only');
-            updateSyncStatus('offline', 'מצב מקומי (לא מחובר)');
+          db.ref(`strains/${userKey}`).set(strains).then(()=>{
+            updateSyncStatus('synced','מסונכרן ✓');
+          }).catch((err)=>{
+            console.error('Firebase save failed',err);
+            updateSyncStatus('offline','שגיאת סנכרון');
+          });
+        } catch(e){
+          updateSyncStatus('offline','שגיאה בסנכרון');
         }
+      }
+    }
 
-        // ===== DATA =====
-        let strains = [];
-        let currentPharmacies = [];
-
-        // ===== SAMPLE DATA =====
-        const SAMPLE_DATA = [
-            {
-                id: 1,
-                name: "Blue Dream",
-                type: "hybrid",
-                potency: "מאוזנת",
-                price: 380,
-                dosage: "0.2-0.5 גרם",
-                thc: 18.5,
-                cbd: 0.8,
-                country: "ארה\"ב",
-                importer: "טוקן",
-                terpenes: "Myrcene, Pinene, Caryophyllene",
-                effects: "מעולה לשימוש יומיומי, משלב אנרגיה והרפיה. מתאים לחרדה וכאבים קלים.",
-                rating: 5,
-                pharmacies: ["סופר-פארם", "טבע אנד סאן"],
-                notes: "זן פופולרי מאוד עם איזון מושלם בין אינדיקה לסאטיבה",
-                createdAt: "2025-01-15T10:30:00Z"
-            },
-            {
-                id: 2,
-                name: "OG Kush",
-                type: "indica",
-                potency: "גבוהה",
-                price: 420,
-                dosage: "0.1-0.3 גרם",
-                thc: 22.3,
-                cbd: 0.3,
-                country: "קנדה",
-                importer: "בי.או.אל",
-                terpenes: "Limonene, Myrcene, Caryophyllene",
-                effects: "הרפיה עמוקה, מעולה לשינה ולכאבים כרוניים",
-                rating: 5,
-                pharmacies: ["סופר-פארם", "ניו-פארם"],
-                notes: "זן אינדיקה חזק מאוד. מומלץ לשעות הערב בלבד",
-                createdAt: "2025-01-16T14:20:00Z"
-            },
-            {
-                id: 3,
-                name: "Sour Diesel",
-                type: "sativa",
-                potency: "גבוהה",
-                price: 350,
-                dosage: "0.2-0.4 גרם",
-                thc: 20.1,
-                cbd: 0.2,
-                country: "הולנד",
-                importer: "IMC",
-                terpenes: "Caryophyllene, Limonene, Myrcene",
-                effects: "אנרגיה, יצירתיות, העלאת מצב רוח. מתאים לדיכאון ועייפות",
-                rating: 4,
-                pharmacies: ["טבע אנד סאן"],
-                notes: "זן סאטיבה אנרגטי מאוד. מצוין לשימוש יום",
-                createdAt: "2025-01-17T09:15:00Z"
-            }
-        ];
-
-        // ===== INIT =====
-        document.addEventListener('DOMContentLoaded', function() {
-            loadData();
-            console.log('✅ מערכת נטענה בהצלחה!');
-        });
-
-        // ===== LOAD DATA =====
-        function loadData() {
-            // Try to load from Firebase first
-            if (db && userKey) {
-                db.ref(`strains/${userKey}`).once('value').then((snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.length > 0) {
-                        strains = data;
-                        localStorage.setItem('cannabisStrains', JSON.stringify(strains));
-                        console.log('✅ נטען מ-Firebase:', strains.length, 'זנים');
-                    } else {
-                        loadFromLocalStorage();
-                    }
-                    renderStrains();
-                }).catch((error) => {
-                    console.warn('⚠️ Firebase load failed, using localStorage');
-                    loadFromLocalStorage();
-                    renderStrains();
-                });
-            } else {
-                loadFromLocalStorage();
-                renderStrains();
-            }
+    function loadFromLocalStorage(){
+      const saved = localStorage.getItem('cannabisStrains');
+      if(saved){
+        try{
+          strains = JSON.parse(saved);
+        } catch(e){
+          console.warn('Local data parse failed, loading samples.');
+          strains = [...SAMPLE_DATA];
+          saveData();
         }
+      } else {
+        strains = [...SAMPLE_DATA];
+        saveData();
+      }
+    }
 
-        function loadFromLocalStorage() {
-            const saved = localStorage.getItem('cannabisStrains');
-            if (saved) {
-                strains = JSON.parse(saved);
-                console.log('✅ נטען מ-localStorage:', strains.length, 'זנים');
-            } else {
-                // First time - load sample data
-                strains = [...SAMPLE_DATA];
-                saveData();
-                console.log('✅ נטענו דוגמאות:', strains.length, 'זנים');
-            }
-        }
-
-        // ===== SAVE DATA =====
-        function saveData() {
-            // Save to localStorage
+    function loadData(){
+      if(db && userKey){
+        db.ref(`strains/${userKey}`).once('value').then(snapshot=>{
+          const data = snapshot.val();
+          if(Array.isArray(data) && data.length>0){
+            strains = data;
             localStorage.setItem('cannabisStrains', JSON.stringify(strains));
-            
-            // Save to Firebase
-            if (db && userKey) {
-                updateSyncStatus('syncing', 'מסנכרן...');
-                db.ref(`strains/${userKey}`).set(strains).then(() => {
-                    updateSyncStatus('synced', 'מסונכרן ✓');
-                    console.log('✅ נשמר ב-Firebase');
-                }).catch((error) => {
-                    updateSyncStatus('offline', 'שגיאת סנכרון');
-                    console.error('❌ Firebase save failed:', error);
-                });
-            }
-        }
-
-        // ===== SYNC STATUS =====
-        function updateSyncStatus(status, text) {
-            const statusEl = document.getElementById('syncStatus');
-            if (statusEl) {
-                statusEl.className = `sync-status ${status}`;
-                statusEl.textContent = `● ${text}`;
-            }
-        }
-
-        function forceSyncNow() {
-            if (db && userKey) {
-                saveData();
-                showNotification('🔄 מסנכרן עכשיו...');
-            } else {
-                showNotification('⚠️ סנכרון ענן לא זמין במצב הדגמה');
-            }
-        }
-
-        // ===== TAB SWITCHING =====
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            const tabMap = {
-                'manage': 'manageTab',
-                'stats': 'statsTab',
-                'search': 'searchTab',
-                'settings': 'settingsTab'
-            };
-            
-            const tabId = tabMap[tabName];
-            const tabElement = document.getElementById(tabId);
-            
-            if (tabElement) {
-                tabElement.classList.add('active');
-                const buttons = document.querySelectorAll('.tab-btn');
-                const buttonMap = ['manage', 'stats', 'search', 'settings'];
-                const buttonIndex = buttonMap.indexOf(tabName);
-                if (buttonIndex >= 0) buttons[buttonIndex].classList.add('active');
-                
-                if (tabName === 'stats') renderStats();
-                else if (tabName === 'search') document.getElementById('searchResults').innerHTML = '<p class="empty-state">הזן מונח חיפוש...</p>';
-            }
-        }
-
-        // ===== MODAL =====
-        function openAddModal() {
-            document.getElementById('addStrainModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeAddModal() {
-            document.getElementById('addStrainModal').classList.remove('active');
-            document.getElementById('addStrainForm').reset();
-            currentPharmacies = [];
-            renderPharmacies();
-            document.body.style.overflow = '';
-        }
-
-        // ===== PHARMACIES =====
-        function addPharmacy() {
-            const input = document.getElementById('pharmacyInput');
-            const pharmacy = input.value.trim();
-            
-            if (pharmacy && !currentPharmacies.includes(pharmacy)) {
-                currentPharmacies.push(pharmacy);
-                renderPharmacies();
-                input.value = '';
-            }
-        }
-
-        function renderPharmacies() {
-            const container = document.getElementById('pharmaciesList');
-            container.innerHTML = currentPharmacies.map((pharmacy, index) => `
-                <div class="pharmacy-tag">
-                    ${pharmacy}
-                    <button onclick="removePharmacy(${index})">×</button>
-                </div>
-            `).join('');
-        }
-
-        function removePharmacy(index) {
-            currentPharmacies.splice(index, 1);
-            renderPharmacies();
-        }
-
-        // ===== ADD STRAIN =====
-        function addStrain(event) {
-            event.preventDefault();
-            
-            const strain = {
-                id: Date.now(),
-                name: document.getElementById('strainName').value,
-                type: document.getElementById('strainType').value,
-                potency: document.getElementById('strainPotency').value || '',
-                price: parseFloat(document.getElementById('strainPrice').value) || 0,
-                dosage: document.getElementById('strainDosage').value || '',
-                thc: parseFloat(document.getElementById('strainTHC').value) || 0,
-                cbd: parseFloat(document.getElementById('strainCBD').value) || 0,
-                country: document.getElementById('strainCountry').value || '',
-                importer: document.getElementById('strainImporter').value || '',
-                terpenes: document.getElementById('strainTerpenes').value || '',
-                effects: document.getElementById('strainEffects').value || '',
-                rating: parseInt(document.getElementById('strainRating').value) || 0,
-                pharmacies: [...currentPharmacies],
-                notes: document.getElementById('strainNotes').value || '',
-                createdAt: new Date().toISOString()
-            };
-            
-            strains.push(strain);
-            saveData();
-            closeAddModal();
-            renderStrains();
-            showNotification(`✅ הזן "${strain.name}" נוסף בהצלחה!`);
-        }
-
-        // ===== RENDER STRAINS =====
-        function renderStrains() {
-            const container = document.getElementById('strainsList');
-            
-            if (strains.length === 0) {
-                container.innerHTML = '<p class="empty-state">אין זנים במערכת. לחץ "פתח טופס הוספה מלא" להתחיל!</p>';
-                return;
-            }
-            
-            const html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>שם</th>
-                            <th>סוג</th>
-                            <th>THC</th>
-                            <th>CBD</th>
-                            <th>מחיר</th>
-                            <th>דירוג</th>
-                            <th>פעולות</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${strains.map((strain, index) => `
-                            <tr>
-                                <td><strong>${strain.name}</strong></td>
-                                <td><span class="strain-type type-${strain.type}">${getTypeHebrew(strain.type)}</span></td>
-                                <td>${strain.thc}%</td>
-                                <td>${strain.cbd}%</td>
-                                <td>${strain.price ? '₪' + strain.price : '-'}</td>
-                                <td>${'⭐'.repeat(strain.rating || 0)}</td>
-                                <td>
-                                    <button class="btn btn-secondary btn-small" onclick="viewStrain(${index})">👁️</button>
-                                    <button class="btn btn-danger btn-small" onclick="deleteStrain(${index})">🗑️</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            
-            container.innerHTML = html;
-        }
-
-        function getTypeHebrew(type) {
-            const types = { 'indica': 'אינדיקה', 'sativa': 'סאטיבה', 'hybrid': 'הייבריד' };
-            return types[type] || type;
-        }
-
-        // ===== VIEW STRAIN =====
-        function viewStrain(index) {
-            const strain = strains[index];
-            const details = `
-📌 ${strain.name}
-━━━━━━━━━━━━━━━━━━━━━━
-🔹 סוג: ${getTypeHebrew(strain.type)}
-🔹 עוצמה: ${strain.potency || '-'}
-🔹 THC: ${strain.thc}%
-🔹 CBD: ${strain.cbd}%
-🔹 מחיר: ${strain.price ? '₪' + strain.price : '-'}
-🔹 מינון: ${strain.dosage || '-'}
-🔹 מדינה: ${strain.country || '-'}
-🔹 יבואן: ${strain.importer || '-'}
-🔹 טרפנים: ${strain.terpenes || '-'}
-🔹 דירוג: ${'⭐'.repeat(strain.rating || 0)}
-🔹 בתי מרקחת: ${strain.pharmacies.join(', ') || '-'}
-
-💊 השפעות:
-${strain.effects || '-'}
-
-📝 הערות:
-${strain.notes || '-'}
-            `;
-            alert(details);
-        }
-
-        // ===== DELETE STRAIN =====
-        function deleteStrain(index) {
-            if (confirm(`למחוק את הזן "${strains[index].name}"?`)) {
-                const deleted = strains.splice(index, 1);
-                saveData();
-                renderStrains();
-                showNotification(`הזן נמחק: ${deleted[0].name}`);
-            }
-        }
-
-        // ===== STATS =====
-        function renderStats() {
-            const container = document.getElementById('statsContent');
-            
-            if (strains.length === 0) {
-                container.innerHTML = '<p class="empty-state">אין נתונים. הוסף זנים כדי לראות סטטיסטיקות.</p>';
-                return;
-            }
-            
-            const totalTHC = strains.reduce((sum, s) => sum + (s.thc || 0), 0);
-            const totalCBD = strains.reduce((sum, s) => sum + (s.cbd || 0), 0);
-            const avgTHC = (totalTHC / strains.length).toFixed(1);
-            const avgCBD = (totalCBD / strains.length).toFixed(1);
-            const avgPrice = (strains.reduce((sum, s) => sum + (s.price || 0), 0) / strains.length).toFixed(0);
-            const avgRating = (strains.reduce((sum, s) => sum + (s.rating || 0), 0) / strains.length).toFixed(1);
-            
-            // Count types
-            const typeCounts = { indica: 0, sativa: 0, hybrid: 0 };
-            strains.forEach(s => typeCounts[s.type]++);
-            
-            container.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">${strains.length}</div>
-                        <div class="stat-label">זנים במערכת</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${avgTHC}%</div>
-                        <div class="stat-label">THC ממוצע</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${avgCBD}%</div>
-                        <div class="stat-label">CBD ממוצע</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">₪${avgPrice}</div>
-                        <div class="stat-label">מחיר ממוצע</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${avgRating} ⭐</div>
-                        <div class="stat-label">דירוג ממוצע</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${typeCounts.indica}</div>
-                        <div class="stat-label">זני אינדיקה</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${typeCounts.sativa}</div>
-                        <div class="stat-label">זני סאטיבה</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${typeCounts.hybrid}</div>
-                        <div class="stat-label">זני הייבריד</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // ===== SEARCH =====
-        function performSearch() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            
-            if (!query) {
-                showNotification('⚠️ הזן מונח חיפוש');
-                return;
-            }
-            
-            const results = strains.filter(s => 
-                s.name.toLowerCase().includes(query) || 
-                s.type.toLowerCase().includes(query) ||
-                (s.terpenes && s.terpenes.toLowerCase().includes(query)) ||
-                (s.effects && s.effects.toLowerCase().includes(query)) ||
-                (s.notes && s.notes.toLowerCase().includes(query))
-            );
-            
-            const container = document.getElementById('searchResults');
-            
-            if (results.length === 0) {
-                container.innerHTML = '<p class="empty-state">לא נמצאו תוצאות</p>';
-                return;
-            }
-            
-            container.innerHTML = `
-                <h3>נמצאו ${results.length} תוצאות:</h3>
-                ${results.map(s => `
-                    <div style="background: var(--bg-accent); padding: 15px; border-radius: 12px; margin: 10px 0;">
-                        <h4 style="color: var(--primary); margin-bottom: 8px;">${s.name}</h4>
-                        <p><span class="strain-type type-${s.type}">${getTypeHebrew(s.type)}</span> • THC: ${s.thc}% • CBD: ${s.cbd}% • ${s.rating ? '⭐'.repeat(s.rating) : ''}</p>
-                        ${s.effects ? `<p style="margin-top: 8px; color: var(--text-secondary);">${s.effects}</p>` : ''}
-                    </div>
-                `).join('')}
-            `;
-        }
-
-        // ===== SHARING =====
-        function shareWhatsApp() {
-            const text = encodeURIComponent(`🌿 המערכת שלי לניהול קנאביס רפואי:\n\n${strains.length} זנים במעקב\nTHC ממוצע: ${(strains.reduce((s, st) => s + (st.thc || 0), 0) / strains.length).toFixed(1)}%`);
-            window.open(`https://wa.me/?text=${text}`, '_blank');
-            showNotification('📱 נפתח WhatsApp!');
-        }
-
-        function shareEmail() {
-            const subject = 'מערכת ניהול קנאביס רפואי';
-            const body = `אני משתמש במערכת לניהול ${strains.length} זני קנאביס רפואי.\n\nהמערכת מסונכרנת בענן בין כל המכשירים!`;
-            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        }
-
-        function copyLink() {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                showNotification('✅ הקישור הועתק ללוח!');
-            });
-        }
-
-        function exportData() {
-            const data = JSON.stringify(strains, null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `cannabis-backup-${Date.now()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showNotification('✅ הנתונים יוצאו בהצלחה!');
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported)) {
-                        if (confirm(`לייבא ${imported.length} זנים? (יתווסף לנתונים הקיימים)`)) {
-                            strains = [...strains, ...imported];
-                            saveData();
-                            renderStrains();
-                            showNotification(`✅ יובאו ${imported.length} זנים!`);
-                        }
-                    }
-                } catch (err) {
-                    showNotification('❌ שגיאה בקריאת הקובץ');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function clearAllData() {
-            if (confirm('⚠️ האם אתה בטוח? פעולה זו תמחק את כל הנתונים!')) {
-                if (confirm('⚠️ אישור סופי - זה ימחק הכל ללא אפשרות שחזור!')) {
-                    strains = [];
-                    saveData();
-                    renderStrains();
-                    showNotification('🗑️ כל הנתונים נמחקו');
-                }
-            }
-        }
-
-        // ===== NOTIFICATION =====
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-
-        // Close modal on background click
-        document.addEventListener('click', function(e) {
-            if (e.target.id === 'addStrainModal') {
-                closeAddModal();
-            }
+          } else {
+            loadFromLocalStorage();
+          }
+          renderStrains();
+        }).catch(err=>{
+          console.warn('Firebase read failed, using local',err);
+          loadFromLocalStorage();
+          renderStrains();
         });
+      } else {
+        loadFromLocalStorage();
+        renderStrains();
+      }
+    }
 
-        // Enter key in pharmacy input
-        document.addEventListener('keypress', function(e) {
-            if (e.target.id === 'pharmacyInput' && e.key === 'Enter') {
-                e.preventDefault();
-                addPharmacy();
+    /* ========== IMPORT with validations & dedupe ========== */
+    function importData(event){
+      const file = event.target.files ? event.target.files[0] : null;
+      if(!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e){
+        try {
+          const imported = JSON.parse(e.target.result);
+          if(!Array.isArray(imported)){
+            showNotification('❌ הקובץ אינו מכיל רשימת זנים תקינה');
+            return;
+          }
+
+          // normalize and validate items, and avoid duplicates by name+type
+          const existingKeys = new Set(strains.map(s => `${(s.name||'').toLowerCase()}::${(s.type||'').toLowerCase()}`));
+          const validItems = [];
+          for(const item of imported){
+            const name = item.name || item.strainName || item.Name;
+            const type = item.type || item.strainType || item.Type;
+            const thc = (typeof item.thc === 'number') ? item.thc : (parseFloat(item.TH C) || parseFloat(item.thc) || (item.thc ? Number(item.thc) : NaN));
+            const cbd = (typeof item.cbd === 'number') ? item.cbd : (parseFloat(item.cbd) || (item.cbd ? Number(item.cbd) : NaN));
+
+            // basic validation
+            if(!name || !type) continue;
+            const key = `${name.toLowerCase()}::${type.toLowerCase()}`;
+            if(existingKeys.has(key)) continue;
+
+            // create normalized object
+            const normalized = {
+              id: item.id || Date.now() + Math.floor(Math.random()*1000),
+              name: String(name),
+              type: String(type),
+              potency: item.potency || item.potency || item.power || '',
+              price: Number(item.price) || 0,
+              dosage: item.dosage || item.mdosage || '',
+              thc: isNaN(thc) ? (item.thc ? Number(item.thc) : 0) : thc,
+              cbd: isNaN(cbd) ? (item.cbd ? Number(item.cbd) : 0) : cbd,
+              country: item.country || item.origin || '',
+              importer: item.importer || '',
+              terpenes: item.terpenes || item.terpene || '',
+              effects: item.effects || item.use || '',
+              rating: Number(item.rating) || 0,
+              pharmacies: Array.isArray(item.pharmacies) ? item.pharmacies : (item.pharmacies ? [item.pharmacies] : []),
+              notes: item.notes || '',
+              createdAt: item.createdAt || new Date().toISOString()
+            };
+
+            validItems.push(normalized);
+            existingKeys.add(key);
+          }
+
+          if(validItems.length === 0){
+            showNotification('⚠️ לא נמצאו זנים תקינים חדשים בקובץ (כפילויות או חוסר שדות)');
+            return;
+          }
+
+          strains = [...strains, ...validItems];
+          saveData();
+          renderStrains();
+          showNotification(`✅ יובאו ${validItems.length} זנים חדשים בהצלחה!`);
+        } catch(err){
+          console.error('Import failed',err);
+          showNotification('❌ שגיאה בקריאת הקובץ');
+        }
+      };
+      reader.readAsText(file);
+      // reset file input so same file can be chosen again
+      event.target.value = '';
+    }
+
+    /* ========== EXPORT ========== */
+    function exportData(){
+      const blob = new Blob([JSON.stringify(strains, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cannabis-backup-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showNotification('💾 הקובץ נשמר בהצלחה');
+    }
+
+    /* ========== RENDER TABLE ========== */
+    function renderStrains(){
+      const container = document.getElementById('strainsList');
+      if(!container) return;
+      if(!Array.isArray(strains) || strains.length === 0){
+        container.innerHTML = '<p class="empty-state">אין זנים במערכת. לחץ "פתח טופס הוספה מלא" כדי להתחיל.</p>';
+        return;
+      }
+
+      const rows = strains.map((s, i) => {
+        const safeTypeClass = s.type ? s.type.toLowerCase() : 'hybrid';
+        const typeHeb = getTypeHebrew(s.type);
+        return `
+          <tr>
+            <td><strong>${escapeHtml(s.name || '-')}</strong></td>
+            <td><span class="strain-type type-${escapeHtml(s.type || 'hybrid')}">${escapeHtml(typeHeb)}</span></td>
+            <td>${s.thc != null && s.thc !== '' ? escapeHtml(s.thc) + '%' : '-'}</td>
+            <td>${s.cbd != null && s.cbd !== '' ? escapeHtml(s.cbd) + '%' : '-'}</td>
+            <td>${s.price ? '₪' + escapeHtml(s.price) : '-'}</td>
+            <td>${s.rating ? '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating)))) : '-'}</td>
+            <td>
+              <button class="btn btn-small" onclick="viewStrain(${i})" aria-label="צפה">👁️</button>
+              <button class="btn btn-small btn-danger" onclick="deleteStrain(${i})" aria-label="מחק">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <table aria-describedby="strainsList">
+          <thead>
+            <tr>
+              <th scope="col">שם</th>
+              <th scope="col">סוג</th>
+              <th scope="col">THC</th>
+              <th scope="col">CBD</th>
+              <th scope="col">מחיר</th>
+              <th scope="col">דירוג</th>
+              <th scope="col">פעולות</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function escapeHtml(str){
+      if(str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+    }
+
+    function getTypeHebrew(type){
+      const map = { 'indica':'אינדיקה', 'sativa':'סאטיבה', 'hybrid':'הייבריד' };
+      return map[(type || '').toLowerCase()] || (type || '-');
+    }
+
+    /* ========== CRUD ========== */
+    function addStrain(event){
+      event.preventDefault();
+      const name = document.getElementById('strainName').value.trim();
+      const type = document.getElementById('strainType').value;
+      if(!name || !type){
+        showNotification('❗ אנא מלא שם וזמן סוג הזן');
+        return;
+      }
+      const strain = {
+        id: Date.now(),
+        name: name,
+        type: type,
+        potency: document.getElementById('strainPotency').value || '',
+        price: Number(document.getElementById('strainPrice').value) || 0,
+        dosage: document.getElementById('strainDosage').value || '',
+        thc: parseFloat(document.getElementById('strainTHC').value) || 0,
+        cbd: parseFloat(document.getElementById('strainCBD').value) || 0,
+        country: document.getElementById('strainCountry').value || '',
+        importer: document.getElementById('strainImporter').value || '',
+        terpenes: document.getElementById('strainTerpenes').value || '',
+        effects: document.getElementById('strainEffects').value || '',
+        rating: parseInt(document.getElementById('strainRating').value) || 0,
+        pharmacies: [...currentPharmacies],
+        notes: document.getElementById('strainNotes').value || '',
+        createdAt: new Date().toISOString()
+      };
+      strains.push(strain);
+      saveData();
+      renderStrains();
+      closeAddModal();
+      showNotification(`✅ הזן "${strain.name}" נוסף בהצלחה!`);
+    }
+
+    function deleteStrain(index){
+      if(index < 0 || index >= strains.length) return;
+      if(confirm(`למחוק את הזן "${strains[index].name}"?`)){
+        const removed = strains.splice(index,1);
+        saveData();
+        renderStrains();
+        showNotification(`🗑️ הזן הוסר: ${removed[0].name}`);
+      }
+    }
+
+    function viewStrain(index){
+      if(index < 0 || index >= strains.length) return;
+      const s = strains[index];
+      const details = [
+        `📌 ${s.name}`,
+        `━━━━━━━━━━━━━━━━━━━━━━`,
+        `🔹 סוג: ${getTypeHebrew(s.type)}`,
+        `🔹 עוצמה: ${s.potency || '-'}`,
+        `🔹 THC: ${s.thc}%`,
+        `🔹 CBD: ${s.cbd}%`,
+        `🔹 מחיר: ${s.price ? '₪' + s.price : '-'}`,
+        `🔹 מינון: ${s.dosage || '-'}`,
+        `🔹 מדינה: ${s.country || '-'}`,
+        `🔹 יבואן: ${s.importer || '-'}`,
+        `🔹 טרפנים: ${s.terpenes || '-'}`,
+        `🔹 דירוג: ${s.rating ? '⭐'.repeat(s.rating) : '-'}`,
+        `🔹 בתי מרקחת: ${(s.pharmacies && s.pharmacies.length) ? s.pharmacies.join(', ') : '-'}`,
+        ``,
+        `💊 השפעות:`,
+        `${s.effects || '-'}`,
+        ``,
+        `📝 הערות:`,
+        `${s.notes || '-'}`
+      ].join('\n');
+      alert(details);
+    }
+
+    /* ========== PHARMACIES UI ========== */
+    function addPharmacy(){
+      const input = document.getElementById('pharmacyInput');
+      const p = input.value.trim();
+      if(!p) return;
+      if(!currentPharmacies.includes(p)){
+        currentPharmacies.push(p);
+        renderPharmacies();
+      }
+      input.value = '';
+    }
+    function renderPharmacies(){
+      const c = document.getElementById('pharmaciesList');
+      c.innerHTML = currentPharmacies.map((p,i)=>`
+        <div class="pharmacy-tag">${escapeHtml(p)} <button onclick="removePharmacy(${i})" aria-label="הסר ${escapeHtml(p)}">×</button></div>
+      `).join('');
+    }
+    function removePharmacy(i){ currentPharmacies.splice(i,1); renderPharmacies(); }
+
+    /* ========== SEARCH ========== */
+    function performSearch(){
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const container = document.getElementById('searchResults');
+      if(!q){ container.innerHTML = '<p class="empty-state">הזן מונח חיפוש...</p>'; return; }
+      const results = strains.filter(s=>{
+        return (s.name && s.name.toLowerCase().includes(q)) ||
+               (s.type && s.type.toLowerCase().includes(q)) ||
+               (s.terpenes && s.terpenes.toLowerCase().includes(q)) ||
+               (s.effects && s.effects.toLowerCase().includes(q)) ||
+               (s.notes && s.notes.toLowerCase().includes(q));
+      });
+      if(results.length === 0){ container.innerHTML = '<p class="empty-state">לא נמצאו תוצאות</p>'; return; }
+      container.innerHTML = `
+        <h3>נמצאו ${results.length} תוצאות:</h3>
+        ${results.map(s=>`
+          <div style="background:var(--bg-accent); padding:12px; border-radius:10px; margin:8px 0;">
+            <h4 style="color:var(--primary); margin:0 0 6px 0;">${escapeHtml(s.name)}</h4>
+            <p style="margin:0;">${getTypeHebrew(s.type)} • THC: ${s.thc}% • CBD: ${s.cbd}% ${s.rating ? '• ' + '⭐'.repeat(s.rating) : ''}</p>
+            ${s.effects ? `<p style="margin-top:8px; color:var(--text-secondary);">${escapeHtml(s.effects)}</p>` : ''}
+          </div>
+        `).join('')}
+      `;
+    }
+
+    /* ========== STATS & CHART ========== */
+    let thcCbdChart = null;
+    function renderStats(){
+      // numeric aggregation
+      const totalTHC = strains.reduce((acc,s)=> acc + (Number(s.thc)||0), 0);
+      const totalCBD = strains.reduce((acc,s)=> acc + (Number(s.cbd)||0), 0);
+      const avgTHC = strains.length ? (totalTHC/strains.length).toFixed(1) : 0;
+      const avgCBD = strains.length ? (totalCBD/strains.length).toFixed(1) : 0;
+      const avgPrice = strains.length ? Math.round(strains.reduce((a,s)=>a + (Number(s.price)||0),0)/strains.length) : 0;
+      const avgRating = strains.length ? (strains.reduce((a,s)=>a + (Number(s.rating)||0),0)/strains.length).toFixed(1) : 0;
+
+      // render stat cards
+      const statsContent = document.getElementById('statsContent');
+      statsContent.innerHTML = `
+        <div class="stat-card"><div class="stat-value">${strains.length}</div><div class="stat-label">זנים במערכת</div></div>
+        <div class="stat-card"><div class="stat-value">${avgTHC}%</div><div class="stat-label">THC ממוצע</div></div>
+        <div class="stat-card"><div class="stat-value">${avgCBD}%</div><div class="stat-label">CBD ממוצע</div></div>
+        <div class="stat-card"><div class="stat-value">₪${avgPrice}</div><div class="stat-label">מחיר ממוצע</div></div>
+        <div class="stat-card"><div class="stat-value">${avgRating} ⭐</div><div class="stat-label">דירוג ממוצע</div></div>
+      `;
+
+      // Chart.js: bar with gradient and custom options
+      const ctx = document.getElementById('thcCbdChart').getContext('2d');
+      // create gradient background for THC
+      const g1 = ctx.createLinearGradient(0,0,0,200);
+      g1.addColorStop(0, 'rgba(102,187,106,0.95)');
+      g1.addColorStop(1, 'rgba(102,187,106,0.35)');
+      const g2 = ctx.createLinearGradient(0,0,0,200);
+      g2.addColorStop(0, 'rgba(66,165,245,0.95)');
+      g2.addColorStop(1, 'rgba(66,165,245,0.28)');
+
+      if(thcCbdChart) { thcCbdChart.destroy(); thcCbdChart = null; }
+
+      thcCbdChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['THC ממוצע', 'CBD ממוצע'],
+          datasets: [{
+            label: 'אחוזים',
+            data: [Number(avgTHC), Number(avgCBD)],
+            backgroundColor: [g1, g2],
+            borderRadius: 8,
+            barThickness: 48
+          }]
+        },
+        options: {
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{
+            legend:{ display:false },
+            title:{ display:true, text:'ממוצע THC ו-CBD בכלל הזנים', color: 'var(--text-main)', padding: { top: 8, bottom: 8 } }
+          },
+          scales:{
+            x:{ ticks:{ color: getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#6b8' } },
+            y:{
+              beginAtZero:true,
+              suggestedMax: Math.max(30, Number(avgTHC)+10),
+              ticks:{ color: getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#6b8' }
             }
-        });
-    </script>
+          }
+        }
+      });
+    }
+
+    /* ========== TABS & UI helpers ========== */
+    function switchTab(tabName){
+      document.querySelectorAll('.tab-content').forEach(tc=>{
+        tc.classList.remove('active');
+        tc.setAttribute('aria-hidden','true');
+      });
+      document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active'));
+      const tabId = (tabName === 'manage') ? 'manageTab' : (tabName === 'stats' ? 'statsTab' : (tabName === 'search' ? 'searchTab' : 'settingsTab'));
+      const tab = document.getElementById(tabId);
+      if(tab){
+        tab.classList.add('active');
+        tab.setAttribute('aria-hidden','false');
+      }
+      // activate button matching onclick name
+      const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b=> b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabName));
+      if(btn) btn.classList.add('active');
+      if(tabName === 'stats') setTimeout(() => renderStats(), 120); // slight delay to ensure canvas sizes
+    }
+
+    function openAddModal(){
+      const m = document.getElementById('addStrainModal');
+      m.classList.add('active');
+      m.setAttribute('aria-hidden','false');
+      document.body.style.overflow='hidden';
+    }
+    function closeAddModal(){
+      const m = document.getElementById('addStrainModal');
+      m.classList.remove('active');
+      m.setAttribute('aria-hidden','true');
+      document.getElementById('addStrainForm').reset();
+      currentPharmacies = [];
+      renderPharmacies();
+      document.body.style.overflow='';
+    }
+
+    /* ========== SYNC ACTION ========== */
+    function forceSyncNow(){
+      if(db && userKey){
+        updateSyncStatus('syncing','מסנכרן...');
+        saveData();
+        showNotification('🔄 מסנכרן עכשיו...');
+      } else {
+        showNotification('⚠️ סנכרון ענן לא זמין במצב מקומי');
+      }
+    }
+
+    /* ========== DARK MODE & ACCESSIBILITY ========== */
+    function toggleDarkMode(e){
+      if(e.target.checked) document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+    }
+
+    /* ========== SHARING HELPERS ========== */
+    function shareWhatsApp(){
+      const text = encodeURIComponent(`🌿 המערכת שלי לניהול קנאביס רפואי - ${strains.length} זנים במעקב.`);
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+      showNotification('📱 פתיחת WhatsApp...');
+    }
+    function shareEmail(){
+      const subject = 'מערכת ניהול קנאביס רפואי';
+      const body = `אני משתמש במערכת לניהול ${strains.length} זנים.\n\nהמערכת מסונכרנת בענן (אם מופעל).\n`;
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+    function copyLink(){
+      navigator.clipboard.writeText(window.location.href).then(()=> showNotification('✅ הקישור הועתק ללוח!'));
+    }
+
+    /* ========== CLEAR ALL ========== */
+    function clearAllData(){
+      if(!confirm('⚠️ האם אתה בטוח? פעולה זו תמחק את כל הנתונים!')) return;
+      if(!confirm('⚠️ אישור סופי - זה ימחק הכל ללא אפשרות שחזור!')) return;
+      strains = [];
+      saveData();
+      renderStrains();
+      showNotification('🗑️ כל הנתונים נמחקו');
+    }
+
+    /* ========== INIT ========== */
+    document.addEventListener('DOMContentLoaded', ()=>{
+      loadData();
+      // accessibility: close modal on ESC
+      document.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape'){
+          const modal = document.getElementById('addStrainModal');
+          if(modal && modal.classList.contains('active')) closeAddModal();
+        }
+      });
+      // prevent accidental navigation / changes indicator (optional)
+      window.addEventListener('beforeunload', (e)=>{
+        // custom message ignored by modern browsers but keep handler if needed
+      });
+    });
+  </script>
 </body>
 </html>
