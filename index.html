@@ -632,9 +632,108 @@
       renderStrains();
     }
 
+    /* ========== CHROME EXTENSION INTEGRATION ========== */
+    function setupExtensionIntegration() {
+      console.log('🔄 Setting up Chrome extension integration...');
+      
+      // האזנה לשינויים ב-localStorage (מהתוסף)
+      window.addEventListener('storage', function(e) {
+        if (e.key === 'importedStrainData' && e.newValue) {
+          console.log('📥 Data received from extension via storage event:', e.newValue);
+          handleImportedStrainData(e.newValue);
+        }
+      });
+      
+      // בדיקה כל 2 שניות לנתונים חדשים
+      setInterval(() => {
+        const importedData = localStorage.getItem('importedStrainData');
+        if (importedData) {
+          console.log('📥 Periodic check found imported data');
+          handleImportedStrainData(importedData);
+        }
+      }, 2000);
+      
+      // בדיקה ראשונית בעת טעינה
+      setTimeout(() => {
+        checkForImportedData();
+      }, 1000);
+    }
+
+    function handleImportedStrainData(data) {
+      try {
+        const strain = JSON.parse(data);
+        if (strain && strain.name) {
+          if (confirm(`מצא נתונים מיובאים עבור "${strain.name}". האם להוסיף למערכת?`)) {
+            fillAddFormWithData(strain);
+            openAddModal();
+            showNotification('✅ הנתונים מיובאים! השלם ושמור.');
+          }
+          // נקה את הנתונים אחרי השימוש
+          localStorage.removeItem('importedStrainData');
+        }
+      } catch (err) {
+        console.error('Error handling imported data:', err);
+        showNotification('❌ שגיאה בקריאת הנתונים המיובאים');
+      }
+    }
+
+    function checkForImportedData(showMessage = false) {
+      const importedData = localStorage.getItem('importedStrainData');
+      if (importedData) {
+        try {
+          const strain = JSON.parse(importedData);
+          if (showMessage || confirm('נמצאו נתונים מיובאים! האם תרצה להוסיף אותם לאוסף?')) {
+            fillAddFormWithData(strain);
+            openAddModal();
+            showNotification('✅ הנתונים מיובאים לטופס! השלם ושמור.');
+          }
+          // Clear the imported data
+          localStorage.removeItem('importedStrainData');
+        } catch (err) {
+          console.error('Error parsing imported data:', err);
+          if (showMessage) {
+            showNotification('❌ שגיאה בקריאת הנתונים המיובאים');
+          }
+        }
+      } else if (showMessage) {
+        showNotification('ℹ️ לא נמצאו נתונים מיובאים');
+      }
+    }
+
+    function fillAddFormWithData(strain) {
+      if (strain.name) document.getElementById('strainName').value = strain.name;
+      if (strain.type) document.getElementById('strainType').value = strain.type;
+      if (strain.thc) document.getElementById('strainTHC').value = strain.thc;
+      if (strain.cbd) document.getElementById('strainCBD').value = strain.cbd;
+      if (strain.terpenes) document.getElementById('strainTerpenes').value = strain.terpenes;
+      if (strain.effects) document.getElementById('strainEffects').value = strain.effects;
+      if (strain.potency) document.getElementById('strainPotency').value = strain.potency;
+      if (strain.price) document.getElementById('strainPrice').value = strain.price;
+      if (strain.country) document.getElementById('strainCountry').value = strain.country;
+      if (strain.importer) document.getElementById('strainImporter').value = strain.importer;
+      if (strain.rating) document.getElementById('strainRating').value = strain.rating;
+      if (strain.notes) document.getElementById('strainNotes').value = strain.notes;
+      
+      // Auto-detect potency based on THC if not provided
+      if (strain.thc && !strain.potency) {
+        const thc = parseFloat(strain.thc);
+        if (thc < 10) document.getElementById('strainPotency').value = 'נמוכה';
+        else if (thc < 18) document.getElementById('strainPotency').value = 'בינונית';
+        else if (thc < 22) document.getElementById('strainPotency').value = 'מאוזנת';
+        else document.getElementById('strainPotency').value = 'גבוהה';
+      }
+      
+      // Handle pharmacies array
+      if (strain.pharmacies && Array.isArray(strain.pharmacies)) {
+        currentPharmacies = [...strain.pharmacies];
+        renderPharmacies();
+      }
+    }
+
     // Initialize Firebase when page loads
     document.addEventListener('DOMContentLoaded', function() {
       initializeFirebase();
+      setupExtensionIntegration();
     });
 
     /* ========== UTILITY FUNCTIONS ========== */
@@ -718,60 +817,6 @@
         console.log('ℹ️ No Firebase connection, loading from localStorage');
         loadFromLocalStorage();
         renderStrains();
-      }
-    }
-
-    /* ========== CHROME EXTENSION IMPORT SUPPORT ========== */
-    function checkForImportedData(showMessage = false) {
-      const importedData = localStorage.getItem('importedStrainData');
-      if (importedData) {
-        try {
-          const strain = JSON.parse(importedData);
-          if (showMessage || confirm('נמצאו נתונים מיובאים! האם תרצה להוסיף אותם לאוסף?')) {
-            fillAddFormWithData(strain);
-            openAddModal();
-            showNotification('✅ הנתונים מיובאים לטופס! השלם ושמור.');
-          }
-          // Clear the imported data
-          localStorage.removeItem('importedStrainData');
-        } catch (err) {
-          console.error('Error parsing imported data:', err);
-          if (showMessage) {
-            showNotification('❌ שגיאה בקריאת הנתונים המיובאים');
-          }
-        }
-      } else if (showMessage) {
-        showNotification('ℹ️ לא נמצאו נתונים מיובאים');
-      }
-    }
-
-    function fillAddFormWithData(strain) {
-      if (strain.name) document.getElementById('strainName').value = strain.name;
-      if (strain.type) document.getElementById('strainType').value = strain.type;
-      if (strain.thc) document.getElementById('strainTHC').value = strain.thc;
-      if (strain.cbd) document.getElementById('strainCBD').value = strain.cbd;
-      if (strain.terpenes) document.getElementById('strainTerpenes').value = strain.terpenes;
-      if (strain.effects) document.getElementById('strainEffects').value = strain.effects;
-      if (strain.potency) document.getElementById('strainPotency').value = strain.potency;
-      if (strain.price) document.getElementById('strainPrice').value = strain.price;
-      if (strain.country) document.getElementById('strainCountry').value = strain.country;
-      if (strain.importer) document.getElementById('strainImporter').value = strain.importer;
-      if (strain.rating) document.getElementById('strainRating').value = strain.rating;
-      if (strain.notes) document.getElementById('strainNotes').value = strain.notes;
-      
-      // Auto-detect potency based on THC if not provided
-      if (strain.thc && !strain.potency) {
-        const thc = parseFloat(strain.thc);
-        if (thc < 10) document.getElementById('strainPotency').value = 'נמוכה';
-        else if (thc < 18) document.getElementById('strainPotency').value = 'בינונית';
-        else if (thc < 22) document.getElementById('strainPotency').value = 'מאוזנת';
-        else document.getElementById('strainPotency').value = 'גבוהה';
-      }
-      
-      // Handle pharmacies array
-      if (strain.pharmacies && Array.isArray(strain.pharmacies)) {
-        currentPharmacies = [...strain.pharmacies];
-        renderPharmacies();
       }
     }
 
@@ -1179,9 +1224,6 @@
 
     /* ========== INIT ========== */
     document.addEventListener('DOMContentLoaded', ()=>{
-      // Check for imported data when app loads
-      setTimeout(() => checkForImportedData(), 1000);
-      
       // Also check when coming back to the page
       window.addEventListener('focus', () => checkForImportedData());
       
