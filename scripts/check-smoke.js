@@ -41,7 +41,12 @@ else if (missingFns.length === 0) ok('ST-04 Handlers: כל ' + handlerNames.size
 else bad('ST-04 Handlers: handlers ללא הגדרה — ' + missingFns.join(', '));
 
 // ---- 3. Exactly the 4 expected CDN scripts, pinned versions ----
-const cdnSrcs = [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].map(m => m[1]);
+// (כניסות מקומיות — למשל /src/main.tsx של wrapper ה-Vite — מותרות דרך רשימת היתר
+//  משלהן; נעילת ה-CDN החיצוניים נשמרת במלואה.)
+const allSrcs = [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].map(m => m[1]);
+const cdnSrcs = allSrcs.filter(u => /^https?:/.test(u));
+const localSrcs = allSrcs.filter(u => !/^https?:/.test(u));
+const allowedLocal = [/^\/src\/main\.tsx$/, /^\/assets\/index-[\w-]+\.js$/];
 const expectedCdns = [
   'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
@@ -51,6 +56,9 @@ const expectedCdns = [
 const cdnsOk = expectedCdns.every(u => cdnSrcs.includes(u)) && cdnSrcs.length === expectedCdns.length;
 if (cdnsOk) ok('ST-04 CDN: 4 סקריפטים מדויקים (firebase ×3 + chart.js)');
 else bad('ST-04 CDN: חוסר/חריגה — נמצא: ' + JSON.stringify(cdnSrcs, null, 0));
+const localsOk = localSrcs.every(u => allowedLocal.some(p => (p instanceof RegExp) ? p.test(u) : p === u)) && localSrcs.length <= allowedLocal.length;
+if (localsOk) ok('ST-04 CDN: כניסות מקומיות תקינות (' + (localSrcs.length ? localSrcs.join(', ') : 'אין') + ')');
+else bad('ST-04 CDN: כניסה מקומית לא-מוכרת — ' + JSON.stringify(localSrcs));
 
 // ---- 4. Meta: lang/dir + viewport (no extra zoom restrictions) ----
 if (/<html[^>]*lang="he"[^>]*dir="rtl"/.test(html)) ok('ST-04 Meta: lang=he + dir=rtl');
