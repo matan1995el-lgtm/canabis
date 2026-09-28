@@ -70,7 +70,7 @@
 - אין test suite; שער: `sh ./scripts/check.sh` (ST-01 תחביר + ST-04 smoke סטטי + ST-02/03 אימות תיקונים). Smoke checklist: `docs/testing/SMOKE-CHECKLIST.md`; חוזה התוסף: `docs/testing/EXTENSION-BRIDGE.md`; תוכנית מלאה: `docs/audit/24-TEST-PLAN.md`.
 
 ## 12. Deployment
-- כיום: העלאה ידנית. **חסימת פרסום יחידה שנותרה: החלת ה-rules + Anonymous auth ב-Firebase Console (TASK-002 צד-שרת)** — הצעדים מתועדים ב-README → Firebase. הקוד עצמו מוכן.
+- **חי ב-production (2026-09-28):** Freebuff Hosting — `https://canabis.freebuff.app` (mode `static_vite`, הפריסה הראשונה הושלמה; פריסות חוזרות: `freebuff-deploy start`). **חסימת שחרור למשתמש אמיתי: החלת ה-rules + Anonymous auth ב-Firebase Console (TASK-002 צד-שרת)** — הצעדים מתועדים ב-README → Firebase; הקוד והפריסה מוכנים.
 - תהליך פריסה מלא (Freebuff Hosting / GitHub Pages / rollback): `docs/audit/26-DEPLOYMENT.md` (TASK-015).
 - גישת ניטור: `docs/audit/27-MONITORING.md` (TASK-016).
 

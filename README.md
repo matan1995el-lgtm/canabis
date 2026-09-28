@@ -62,7 +62,7 @@ Vanilla JS (ES6+) · HTML5 · CSS3 (מוטמע) · Firebase RTDB compat SDK 10.7
 שער אוטומטי: `sh ./scripts/check.sh` (תחביר JS inline + שער smoke סטטי ST-04 + אימות תיקונים מרכזיים — TASK-012). צ'קליסט smoke דפדפן: [docs/testing/SMOKE-CHECKLIST.md](docs/testing/SMOKE-CHECKLIST.md), חוזה התוסף: [docs/testing/EXTENSION-BRIDGE.md](docs/testing/EXTENSION-BRIDGE.md), תוכנית הבדיקות המלאה ב-[docs/audit/24-TEST-PLAN.md](docs/audit/24-TEST-PLAN.md).
 
 ## 📦 Build & Deployment
-אין build לאפליקציה עצמה — היא נפרסת כפי שהיא. `package.json` + `vite.config.mjs` + `src/main.tsx` הם wrapper סטטי בלבד (Vite+React, ללא טרנספורמציה על הלוגיקה) הדרוש ל-Freebuff Hosting, שמזהה רק פרויקטי React: `bun run build` מייצר `dist/`, `bun run dev` לפיתוח, `bun run check` להרצת שער האיכות. תהליך פריסה מלא (Freebuff Hosting / GitHub Pages / rollback / דרישות מוקדמות): [docs/audit/26-DEPLOYMENT.md](docs/audit/26-DEPLOYMENT.md). מומלץ GitHub Pages **לאחר** סגירת ה-Firebase rules. ניטור: [docs/audit/27-MONITORING.md](docs/audit/27-MONITORING.md).
+**חי:** [canabis.freebuff.app](https://canabis.freebuff.app) (Freebuff Hosting). אין build לאפליקציה עצמה — היא נפרסת כפי שהיא. `package.json` + `vite.config.mjs` + `src/main.tsx` הם wrapper סטטי בלבד (Vite+React, ללא טרנספורמציה על הלוגיקה) הדרוש ל-Freebuff Hosting, שמזהה רק פרויקטי React: `bun run build` מייצר `dist/`, `bun run dev` לפיתוח, `bun run check` להרצת שער האיכות. תהליך פריסה מלא (Freebuff Hosting / GitHub Pages / rollback / דרישות מוקדמות): [docs/audit/26-DEPLOYMENT.md](docs/audit/26-DEPLOYMENT.md). מומלץ GitHub Pages **לאחר** סגירת ה-Firebase rules. ניטור: [docs/audit/27-MONITORING.md](docs/audit/27-MONITORING.md).
 
 ## 📁 Structure
 ```
