@@ -1,0 +1,16 @@
+{
+  "name": "canabis-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "מערכת ניהול קנאביס רפואי — SPA בקובץ יחיד (wrapper של Vite לצורך פריסה ב-Freebuff Hosting)",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "check": "sh ./scripts/check.sh"
+  },
+  "devDependencies": {
+    "vite": "^5.4.8"
+  }
+}

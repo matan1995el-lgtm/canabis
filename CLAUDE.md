@@ -12,7 +12,8 @@
 - **Persistence:** localStorage (`cannabisStrains`, `userKey` — legacy למיגרציה, `canabisDark`, `importedStrainData`) + Firebase RTDB compat SDK 10.7.1 (CDN gstatic, כולל **firebase-auth-compat.js**).
 - **גרפים:** Chart.js 4.4.0 (CDN jsdelivr, global `Chart`, עם guard ב-`renderStats`).
 - **פונטים:** Heebo (Google Fonts).
-- **אין:** build, bundler, package.json, tests, CI, שרת, env vars. הקונפיג של Firebase מוטמע בקוד (שורות ~587–596).
+- **אין:** framework, tests, CI, שרת, env vars. הקונפיג של Firebase מוטמע בקוד (שורות ~587–596).
+- **Wrapper פריסה (2026-09-28):** `package.json` + `vite.config.mjs` מתפקדים אך ורק כ-wrapper סטטי של Vite עבור Freebuff Hosting (דורש framework מזוהה). `bun run build` מעתיק את `index.html` ל-`dist/` ללא טרנספורמציה על הלוגיקה; **אין להוסיף תלויות או טרנספורמציות**. שער: `bun run check` = `sh ./scripts/check.sh`.
 - **שער אוטומטי:** `sh ./scripts/check.sh` — תחביר JS inline (ST-01) + שער smoke סטטי (ST-04: DOM ids/handlers/CDN/meta) + grep אימות לתיקונים מרכזיים (ST-02/03).
 
 ## 3. Structure — מפת `index.html`
