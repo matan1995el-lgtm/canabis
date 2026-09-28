@@ -2,14 +2,15 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>🌿 מערכת ניהול קנאביס רפואי</title>
 
   <!-- Fonts & libs -->
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
   <style>
     /* ---------- ROOT & THEME ---------- */
@@ -104,6 +105,10 @@
     }
     .tab-btn:hover{ transform:translateY(-4px); box-shadow:0 6px 18px rgba(0,0,0,0.06); }
     .tab-btn.active{ background:linear-gradient(90deg,var(--primary),var(--primary-dark)); color:#fff; border-color:transparent; box-shadow:0 8px 30px rgba(102,187,106,0.18); }
+
+    /* Tab visibility (FINDING-002 / TASK-003) */
+    .tab-content{ display:none; }
+    .tab-content.active{ display:block; }
 
     /* ---------- CARD ---------- */
     .card{
@@ -522,6 +527,12 @@
     /* ========== DATA & SAMPLE ========== */
     let strains = [];
     let currentPharmacies = [];
+    let editingId = null;
+
+    // Apply saved dark mode before first render (TASK-014)
+    if(localStorage.getItem('canabisDark') === '1'){
+      document.documentElement.classList.add('dark');
+    }
 
     const SAMPLE_DATA = [
       {
@@ -556,77 +567,152 @@
     };
 
     let db = null;
-    let userKey = null;
+    let userKey = null;      // legacy local key (pre-auth) — kept for one-time migration
+    let authUid = null;      // Firebase auth uid — the authoritative per-user path (TASK-002)
+    let cloudListenerAttached = false;
+    let suppressCloudEcho = 0;    // counter: one skip per pending cloud write (a single boolean can miss overlapping saves)
+    let lastCloudStrains = null;   // last validated cloud snapshot (TASK-005 anti-overwrite guard)
+    let expectCloudShrink = false; // set on intentional local removals (delete/wipe)
 
-    // 🚀 INITIALIZE FIREBASE
+    // 🚀 INITIALIZE FIREBASE + ANONYMOUS AUTH (TASK-002)
     function initializeFirebase() {
       try {
         console.log('🔄 Starting Firebase initialization...');
-        
-        // Check if Firebase is available
+
         if (typeof firebase === 'undefined') {
           throw new Error('Firebase SDK not loaded');
         }
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         db = firebase.database();
-        
         console.log('✅ Firebase initialized successfully');
-        console.log('📊 Database URL:', firebaseConfig.databaseURL);
 
-        // Create/load user key
+        // Preserve legacy local key for migration lookup
         userKey = localStorage.getItem('userKey');
         if(!userKey){
-          userKey = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2,9);
+          userKey = 'user_' + Date.now() + '_' + Math.random().toString(36).slice(2,11);
           localStorage.setItem('userKey', userKey);
-          console.log('✅ New user key created:', userKey);
-        } else {
-          console.log('✅ Existing user key found:', userKey);
         }
 
-        // Test connection
-        testFirebaseConnection();
-        
+        // Connection status via read-only .info/connected (TASK-008 — replaces connection_test write)
+        db.ref('.info/connected').on('value', (snap) => {
+          if(snap.val() === true){
+            updateSyncStatus(authUid ? 'synced' : 'syncing', authUid ? 'מחובר לענן' : 'מתחבר...');
+          } else {
+            updateSyncStatus('offline', 'מצב מקומי (לא מחובר)');
+          }
+        });
+
+        // Anonymous sign-in — required by the new security rules
+        updateSyncStatus('syncing', 'מתחבר...');
+        firebase.auth().signInAnonymously()
+          .then((cred) => {
+            authUid = cred.user.uid;
+            console.log('✅ Anonymous auth OK:', authUid);
+            migrateLegacyDataIfNeeded()
+              .then(() => attachCloudListener())
+              .catch((e) => { console.warn('Migration step failed, continuing:', e); attachCloudListener(); });
+          })
+          .catch((error) => {
+            console.error('💥 Anonymous auth failed:', error);
+            handleFirebaseError(error);
+          });
+
       } catch (error) {
         console.error('💥 Firebase initialization failed:', error);
         handleFirebaseError(error);
       }
     }
 
-    function testFirebaseConnection() {
-      if (!db) return;
-      
-      console.log('🔄 Testing Firebase connection...');
-      updateSyncStatus('syncing', 'בודק חיבור...');
-
-      // Try a small write to test connection
-      const testRef = db.ref('connection_test');
-      testRef.set({
-        timestamp: new Date().toISOString(),
-        message: 'Connection test from medical cannabis app'
-      })
-      .then(() => {
-        console.log('✅ Firebase connection test: SUCCESS');
-        updateSyncStatus('synced', 'מסונכרן ✓');
-        loadData(); // Load data after connection is confirmed
-      })
-      .catch((error) => {
-        console.error('❌ Firebase connection test failed:', error);
-        handleFirebaseError(error);
+    // One-time migration: move legacy user_… node into the auth uid path (TASK-002)
+    function migrateLegacyDataIfNeeded(){
+      const legacyRef = db.ref('strains/' + userKey);
+      const newRef = db.ref('strains/' + authUid);
+      return legacyRef.once('value').then((snap) => {
+        const legacy = snap.val();
+        if(Array.isArray(legacy) && legacy.length > 0){
+          return newRef.once('value').then((newSnap) => {
+            const existing = newSnap.val();
+            if(Array.isArray(existing) && existing.length > 0){
+              // Both populated — merge by id, cloud wins on conflicts
+              const byId = new Map(existing.map(s => [String(s.id), s]));
+              legacy.forEach(s => { if(s && s.id != null && !byId.has(String(s.id))) byId.set(String(s.id), s); });
+              return newRef.set(Array.from(byId.values())).then(() => legacyRef.remove());
+            }
+            return newRef.set(legacy).then(() => legacyRef.remove());
+          });
+        }
+        return Promise.resolve();
       });
+    }
+
+    // Real-time listener: cloud → UI (TASK-005)
+    function attachCloudListener(){
+      if(!db || !authUid || cloudListenerAttached) return;
+      cloudListenerAttached = true;
+      db.ref('strains/' + authUid).on('value', (snapshot) => {
+        const data = snapshot.val();
+        if(suppressCloudEcho > 0){ suppressCloudEcho--; return; }
+        const valid = sanitizeCloudData(data);
+        if(valid !== null){
+          strains = valid;
+          lastCloudStrains = valid.map(s => ({ ...s }));
+          try{ localStorage.setItem('cannabisStrains', JSON.stringify(strains)); }catch(e){ console.warn('localStorage write failed:', e); }
+          renderStrains();
+          console.log('✅ Cloud update applied:', strains.length, 'strains');
+        }
+      }, (error) => {
+        console.warn('Cloud listener error:', error);
+      });
+      loadData();
+    }
+
+    // Validate cloud payload per item (TASK-005 / FINDING-004)
+    function sanitizeCloudData(data){
+      if(!Array.isArray(data) || data.length === 0) return null;
+      const valid = [];
+      for(const item of data){
+        if(!item || typeof item !== 'object') continue;
+        const name = typeof item.name === 'string' ? item.name.trim() : '';
+        const type = typeof item.type === 'string' ? item.type.toLowerCase() : '';
+        if(!name || !['indica','sativa','hybrid'].includes(type)) continue;
+        valid.push({
+          id: Number(item.id) || Date.now(),
+          name,
+          type,
+          potency: typeof item.potency === 'string' ? item.potency : '',
+          price: Number(item.price) || 0,
+          dosage: typeof item.dosage === 'string' ? item.dosage : '',
+          thc: Number(item.thc) || 0,
+          cbd: Number(item.cbd) || 0,
+          country: typeof item.country === 'string' ? item.country : '',
+          importer: typeof item.importer === 'string' ? item.importer : '',
+          terpenes: typeof item.terpenes === 'string' ? item.terpenes : '',
+          effects: typeof item.effects === 'string' ? item.effects : '',
+          rating: Math.max(0, Math.min(5, Number(item.rating) || 0)),
+          pharmacies: Array.isArray(item.pharmacies) ? item.pharmacies.filter(p => typeof p === 'string') : [],
+          notes: typeof item.notes === 'string' ? item.notes : '',
+          createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString()
+        });
+        // Firebase rejects undefined values — add updatedAt only when it actually exists
+        if(typeof item.updatedAt === 'string') valid[valid.length - 1].updatedAt = item.updatedAt;
+      }
+      return valid.length > 0 ? valid : null;
     }
 
     function handleFirebaseError(error) {
       console.error('Firebase Error:', error);
-      
-      if (error.code === 'DATABASE_NOT_FOUND') {
+
+      if (error && error.code === 'auth/operation-not-allowed') {
+        updateSyncStatus('offline', 'אימות אנונימי כבוי — הפעל ב-Firebase Console');
+        showNotification('❌ יש להפעיל Anonymous sign-in ב-Firebase Console → Authentication');
+      } else if (error && error.code === 'DATABASE_NOT_FOUND') {
         updateSyncStatus('offline', 'מסד נתונים לא קיים - צור Realtime Database');
         showNotification('❌ צריך ליצור Realtime Database ב-Firebase Console');
       } else {
         updateSyncStatus('offline', 'מצב מקומי (לא מחובר)');
       }
-      
+
       // Load from local data anyway
       loadFromLocalStorage();
       renderStrains();
@@ -644,16 +730,7 @@
         }
       });
       
-      // בדיקה כל 2 שניות לנתונים חדשים
-      setInterval(() => {
-        const importedData = localStorage.getItem('importedStrainData');
-        if (importedData) {
-          console.log('📥 Periodic check found imported data');
-          handleImportedStrainData(importedData);
-        }
-      }, 2000);
-      
-      // בדיקה ראשונית בעת טעינה
+      // בדיקה ראשונית בעת טעינה (TASK-014: ה-polling הוסר — storage event + focus מספיקים)
       setTimeout(() => {
         checkForImportedData();
       }, 1000);
@@ -757,18 +834,36 @@
 
     /* ========== DATA MANAGEMENT ========== */
     function saveData(){
-      // Always save locally
-      localStorage.setItem('cannabisStrains', JSON.stringify(strains));
-      
+      // Always save locally (guarded — TASK-010)
+      try{
+        localStorage.setItem('cannabisStrains', JSON.stringify(strains));
+      }catch(e){
+        console.warn('localStorage save failed:', e);
+        showNotification('⚠️ השמירה המקומית נכשלה — הנתונים בזיכרון בלבד');
+      }
+
       // Try to save to Firebase if connected
-      if(db && userKey){
+      if(db && authUid){
+        // Anti-overwrite guard (TASK-005): local list shrank vs cloud without an intentional removal
+        if(!expectCloudShrink && Array.isArray(lastCloudStrains) && strains.length < lastCloudStrains.length){
+          const localIds = new Set(strains.map(s => String(s.id)));
+          const missing = lastCloudStrains.filter(s => !localIds.has(String(s.id)));
+          if(missing.length > 0 && confirm(`⚠️ זוהו ${missing.length} זנים בענן שחסרים מקומית. למזג אוטומטית כדי למנוע אובדן נתונים?`)){
+            strains = [...strains, ...missing];
+            try{ localStorage.setItem('cannabisStrains', JSON.stringify(strains)); }catch(e){ console.warn('localStorage save failed:', e); }
+          }
+        }
+        expectCloudShrink = false;
         updateSyncStatus('syncing', 'מסנכרן...');
-        db.ref(`strains/${userKey}`).set(strains)
+        suppressCloudEcho++; // skip our own echo; overlapping saves each get their own skip
+        const payload = strains.map(s => ({ ...s }));
+        db.ref(`strains/${authUid}`).set(payload)
           .then(() => {
+            lastCloudStrains = payload;
             updateSyncStatus('synced', 'מסונכרן ✓');
-            console.log('✅ Data saved to Firebase');
           })
           .catch((error) => {
+            suppressCloudEcho = Math.max(0, suppressCloudEcho - 1);
             console.error('❌ Firebase save failed:', error);
             updateSyncStatus('offline', 'שגיאת סנכרון');
           });
@@ -793,17 +888,18 @@
     }
 
     function loadData(){
-      if(db && userKey){
+      if(db && authUid){
         console.log('🔄 Loading data from Firebase...');
-        db.ref(`strains/${userKey}`).once('value')
+        db.ref(`strains/${authUid}`).once('value')
           .then(snapshot => {
-            const data = snapshot.val();
-            if(Array.isArray(data) && data.length > 0){
+            const data = sanitizeCloudData(snapshot.val());
+            if(data){
               strains = data;
-              localStorage.setItem('cannabisStrains', JSON.stringify(strains));
+              lastCloudStrains = data.map(s => ({ ...s }));
+              try{ localStorage.setItem('cannabisStrains', JSON.stringify(strains)); }catch(e){ console.warn('localStorage write failed:', e); }
               console.log('✅ Loaded from Firebase:', strains.length, 'strains');
             } else {
-              console.log('ℹ️ No data in Firebase, loading from localStorage');
+              console.log('ℹ️ No valid data in Firebase, loading from localStorage');
               loadFromLocalStorage();
             }
             renderStrains();
@@ -845,14 +941,17 @@
 
             // Basic validation
             if(!name || !type) continue;
-            const key = `${name.toLowerCase()}::${type.toLowerCase()}`;
+            const normType = String(type).toLowerCase();
+            // Whitelist the type (TASK-006): non-canonical types are silently skipped
+            if(!['indica','sativa','hybrid'].includes(normType)) continue;
+            const key = `${name.toLowerCase()}::${normType}`;
             if(existingKeys.has(key)) continue;
 
             // Create normalized object
             const normalized = {
               id: item.id || Date.now() + Math.floor(Math.random()*1000),
               name: String(name),
-              type: String(type),
+              type: normType,
               potency: item.potency || item.power || '',
               price: Number(item.price) || 0,
               dosage: item.dosage || item.mdosage || '',
@@ -862,7 +961,7 @@
               importer: item.importer || '',
               terpenes: item.terpenes || item.terpene || '',
               effects: item.effects || item.use || '',
-              rating: Number(item.rating) || 0,
+              rating: Math.max(0, Math.min(5, Number(item.rating) || 0)),
               pharmacies: Array.isArray(item.pharmacies) ? item.pharmacies : (item.pharmacies ? [item.pharmacies] : []),
               notes: item.notes || '',
               createdAt: item.createdAt || new Date().toISOString()
@@ -915,17 +1014,18 @@
       }
 
       const rows = strains.map((s, i) => {
-        const safeTypeClass = s.type ? s.type.toLowerCase() : 'hybrid';
+        const typeKey = ['indica','sativa','hybrid'].includes((s.type || '').toLowerCase()) ? s.type.toLowerCase() : 'hybrid';
         const typeHeb = getTypeHebrew(s.type);
         return `
           <tr>
             <td><strong>${escapeHtml(s.name || '-')}</strong></td>
-            <td><span class="strain-type type-${escapeHtml(s.type || 'hybrid')}">${escapeHtml(typeHeb)}</span></td>
+            <td><span class="strain-type type-${typeKey}">${escapeHtml(typeHeb)}</span></td>
             <td>${s.thc != null && s.thc !== '' ? escapeHtml(s.thc) + '%' : '-'}</td>
             <td>${s.cbd != null && s.cbd !== '' ? escapeHtml(s.cbd) + '%' : '-'}</td>
             <td>${s.price ? '₪' + escapeHtml(s.price) : '-'}</td>
             <td>${s.rating ? '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating)))) : '-'}</td>
             <td>
+              <button class="btn btn-small" onclick="editStrain(${i})" aria-label="ערוך">✏️</button>
               <button class="btn btn-small" onclick="viewStrain(${i})" aria-label="צפה">👁️</button>
               <button class="btn btn-small btn-danger" onclick="deleteStrain(${i})" aria-label="מחק">🗑️</button>
             </td>
@@ -993,6 +1093,21 @@
         notes: document.getElementById('strainNotes').value || '',
         createdAt: new Date().toISOString()
       };
+      if(editingId !== null){
+        // Edit mode (TASK-013): update in place, preserve id/createdAt, stamp updatedAt
+        const idx = strains.findIndex(s => String(s.id) === String(editingId));
+        if(idx >= 0){
+          strain.id = strains[idx].id;
+          strain.createdAt = strains[idx].createdAt;
+          strain.updatedAt = new Date().toISOString();
+          strains[idx] = strain;
+          saveData();
+          renderStrains();
+          closeAddModal();
+          showNotification(`✅ הזן "${strain.name}" עודכן בהצלחה!`);
+          return;
+        }
+      }
       strains.push(strain);
       saveData();
       renderStrains();
@@ -1000,9 +1115,35 @@
       showNotification(`✅ הזן "${strain.name}" נוסף בהצלחה!`);
     }
 
+    // Open the modal pre-filled for editing an existing strain (TASK-013)
+    function editStrain(index){
+      if(index < 0 || index >= strains.length) return;
+      const s = strains[index];
+      document.getElementById('strainName').value = s.name || '';
+      document.getElementById('strainType').value = s.type || '';
+      document.getElementById('strainPotency').value = s.potency || '';
+      document.getElementById('strainPrice').value = s.price || '';
+      document.getElementById('strainDosage').value = s.dosage || '';
+      document.getElementById('strainTHC').value = (s.thc === 0 || s.thc) ? s.thc : '';
+      document.getElementById('strainCBD').value = (s.cbd === 0 || s.cbd) ? s.cbd : '';
+      document.getElementById('strainCountry').value = s.country || '';
+      document.getElementById('strainImporter').value = s.importer || '';
+      document.getElementById('strainTerpenes').value = s.terpenes || '';
+      document.getElementById('strainRating').value = s.rating || '';
+      document.getElementById('strainEffects').value = s.effects || '';
+      document.getElementById('strainNotes').value = s.notes || '';
+      currentPharmacies = Array.isArray(s.pharmacies) ? [...s.pharmacies] : [];
+      renderPharmacies();
+      editingId = s.id;
+      const title = document.querySelector('#addStrainModal .modal-header h2');
+      if(title) title.textContent = '✏️ ערוך זן';
+      openAddModal();
+    }
+
     function deleteStrain(index){
       if(index < 0 || index >= strains.length) return;
       if(confirm(`למחוק את הזן "${strains[index].name}"?`)){
+        expectCloudShrink = true; // intentional removal — skip the anti-overwrite guard
         const removed = strains.splice(index,1);
         saveData();
         renderStrains();
@@ -1025,7 +1166,7 @@
         `🔹 מדינה: ${s.country || '-'}`,
         `🔹 יבואן: ${s.importer || '-'}`,
         `🔹 טרפנים: ${s.terpenes || '-'}`,
-        `🔹 דירוג: ${s.rating ? '⭐'.repeat(s.rating) : '-'}`,
+        `🔹 דירוג: ${s.rating ? '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating) || 0))) : '-'}`,
         `🔹 בתי מרקחת: ${(s.pharmacies && s.pharmacies.length) ? s.pharmacies.join(', ') : '-'}`,
         ``,
         `💊 השפעות:`,
@@ -1074,7 +1215,7 @@
         ${results.map(s=>`
           <div style="background:var(--bg-accent); padding:12px; border-radius:10px; margin:8px 0;">
             <h4 style="color:var(--primary); margin:0 0 6px 0;">${escapeHtml(s.name)}</h4>
-            <p style="margin:0;">${getTypeHebrew(s.type)} • THC: ${s.thc}% • CBD: ${s.cbd}% ${s.rating ? '• ' + '⭐'.repeat(s.rating) : ''}</p>
+            <p style="margin:0;">${escapeHtml(getTypeHebrew(s.type))} • THC: ${Number(s.thc) || 0}% • CBD: ${Number(s.cbd) || 0}% ${s.rating ? '• ' + '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating) || 0))) : ''}</p>
             ${s.effects ? `<p style="margin-top:8px; color:var(--text-secondary);">${escapeHtml(s.effects)}</p>` : ''}
           </div>
         `).join('')}
@@ -1102,8 +1243,17 @@
         <div class="stat-card"><div class="stat-value">${avgRating} ⭐</div><div class="stat-label">דירוג ממוצע</div></div>
       `;
 
+      // Chart.js guard (TASK-007): CDN blocked → metrics still shown, no crash
+      if(typeof Chart === 'undefined'){
+        statsContent.insertAdjacentHTML('beforeend', '<p class="empty-state" style="grid-column:1/-1;">📈 הגרף אינו זמין ללא חיבור לרשת</p>');
+        return;
+      }
+
       // Chart.js: bar with gradient and custom options
       const ctx = document.getElementById('thcCbdChart').getContext('2d');
+      const bodyStyle = getComputedStyle(document.body);
+      const textMain = bodyStyle.getPropertyValue('--text-main').trim() || '#1a3a2a';
+      const textSecondary = bodyStyle.getPropertyValue('--text-secondary').trim() || '#4a6b5a';
       // Create gradient background for THC
       const g1 = ctx.createLinearGradient(0,0,0,200);
       g1.addColorStop(0, 'rgba(102,187,106,0.95)');
@@ -1131,14 +1281,14 @@
           maintainAspectRatio:false,
           plugins:{
             legend:{ display:false },
-            title:{ display:true, text:'ממוצע THC ו-CBD בכלל הזנים', color: 'var(--text-main)', padding: { top: 8, bottom: 8 } }
+            title:{ display:true, text:'ממוצע THC ו-CBD בכלל הזנים', color: textMain, padding: { top: 8, bottom: 8 } }
           },
           scales:{
-            x:{ ticks:{ color: getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#6b8' } },
+            x:{ ticks:{ color: textSecondary } },
             y:{
               beginAtZero:true,
               suggestedMax: Math.max(30, Number(avgTHC)+10),
-              ticks:{ color: getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#6b8' }
+              ticks:{ color: textSecondary }
             }
           }
         }
@@ -1164,11 +1314,15 @@
       if(tabName === 'stats') setTimeout(() => renderStats(), 120); // Slight delay to ensure canvas sizes
     }
 
+    let lastModalTrigger = null;
     function openAddModal(){
+      lastModalTrigger = document.activeElement;
       const m = document.getElementById('addStrainModal');
       m.classList.add('active');
       m.setAttribute('aria-hidden','false');
       document.body.style.overflow='hidden';
+      // TASK-009: initial focus on the first field
+      setTimeout(() => { const f = document.getElementById('strainName'); if(f) f.focus(); }, 50);
     }
     function closeAddModal(){
       const m = document.getElementById('addStrainModal');
@@ -1177,12 +1331,18 @@
       document.getElementById('addStrainForm').reset();
       currentPharmacies = [];
       renderPharmacies();
+      editingId = null;
+      const title = document.querySelector('#addStrainModal .modal-header h2');
+      if(title) title.textContent = '➕ הוסף זן חדש';
       document.body.style.overflow='';
+      // TASK-009: return focus to the triggering element
+      if(lastModalTrigger && lastModalTrigger.focus) lastModalTrigger.focus();
+      lastModalTrigger = null;
     }
 
     /* ========== SYNC ACTION ========== */
     function forceSyncNow(){
-      if(db && userKey){
+      if(db && authUid){
         updateSyncStatus('syncing','מסנכרן...');
         saveData();
         showNotification('🔄 מסנכרן עכשיו...');
@@ -1193,8 +1353,16 @@
 
     /* ========== DARK MODE & ACCESSIBILITY ========== */
     function toggleDarkMode(e){
-      if(e.target.checked) document.documentElement.classList.add('dark');
-      else document.documentElement.classList.remove('dark');
+      if(e.target.checked){
+        document.documentElement.classList.add('dark');
+        try{ localStorage.setItem('canabisDark','1'); }catch(err){}
+      } else {
+        document.documentElement.classList.remove('dark');
+        try{ localStorage.setItem('canabisDark','0'); }catch(err){}
+      }
+      // Re-resolve chart colors if the stats tab is visible
+      const statsTab = document.getElementById('statsTab');
+      if(statsTab && statsTab.classList.contains('active')) renderStats();
     }
 
     /* ========== SHARING HELPERS ========== */
@@ -1209,13 +1377,20 @@
       window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
     function copyLink(){
-      navigator.clipboard.writeText(window.location.href).then(()=> showNotification('✅ הקישור הועתק ללוח!'));
+      navigator.clipboard.writeText(window.location.href)
+        .then(()=> showNotification('✅ הקישור הועתק ללוח!'))
+        .catch(()=> showNotification('❌ לא ניתן להעתיק את הקישור'));
     }
 
     /* ========== CLEAR ALL ========== */
     function clearAllData(){
+      // TASK-004: always produce a backup file before the destructive confirms
+      if(strains.length > 0){
+        exportData();
+      }
       if(!confirm('⚠️ האם אתה בטוח? פעולה זו תמחק את כל הנתונים!')) return;
       if(!confirm('⚠️ אישור סופי - זה ימחק הכל ללא אפשרות שחזור!')) return;
+      expectCloudShrink = true; // intentional wipe — skip the anti-overwrite guard
       strains = [];
       saveData();
       renderStrains();
@@ -1224,6 +1399,10 @@
 
     /* ========== INIT ========== */
     document.addEventListener('DOMContentLoaded', ()=>{
+      // Sync the dark-mode checkbox with the applied state (TASK-010)
+      const darkCheckbox = document.getElementById('toggleDark');
+      if(darkCheckbox) darkCheckbox.checked = document.documentElement.classList.contains('dark');
+
       // Also check when coming back to the page
       window.addEventListener('focus', () => checkForImportedData());
       
