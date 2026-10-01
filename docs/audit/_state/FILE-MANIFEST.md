@@ -2,7 +2,7 @@
 
 # FILE-MANIFEST — מלאי הקבצים
 
-**Root:** `/home/daytona/codebase` · **נסרק:** 2026-09-24 · **Re-audit:** 2026-09-25 · **סה"כ קבצים:** 31
+**Re-audit 2:** 2026-10-01 · **Root:** `/home/daytona/codebase` · **נסרק:** 2026-09-24 · **Re-audit:** 2026-09-25 · **סה"כ קבצים:** 43 (היו 31)
 
 > **🔄 עודכן ב-Re-audit 2026-09-25:**
 >
@@ -39,5 +39,21 @@
 - אין `package.json` / lock files — אין dependency management ואין build pipeline.
 - אין קבצי tests, lint config, CI/CD, Dockerfile, `.env*`, `.gitignore`, favicon/assets.
 - אין קבצי server — ההגשה נעשית כקובץ סטטי (GitHub Pages / העלאה ידנית; הערת ה-commit היחיד: "Add files via upload").
+
+> ⚠️ הרשימה שלעיל היא היסטורית (2026-09-24) — חלקה התיישן: מאז נוספו package.json/wrapper (D-18/D-19) והפריסה חיה.
+
+## 🔄 Re-audit 2026-10-01 — קבצים שנוספו מאז (wrapper פריסה + gate)
+
+| Path | Type | Role | Read | Notes |
+|---|---|---|---|---|
+| `package.json` | Config (manifest) | wrapper Vite+React לזיהוי framework ב-Freebuff Hosting | ✅ | D-18/D-19; scripts: dev/build/preview/check |
+| `vite.config.mjs` | Config | Vite מינימלי (hmr:false, copyPublicDir:true) | ✅ | ללא טרנספורמציה על האפליקציה |
+| `src/main.tsx` | Source (wrapper) | כניסת React סמלית — Fragment ריק ל-#react-root | ✅ | אינו נוגע בלוגיקה |
+| `tsconfig.json` | Config | TypeScript מינימלי (include: src) | ✅ | tsc PASS |
+| `bun.lock` | Lock file | נעילת תלויות wrapper | ⚠️ סווג בלבד | נוצר ב-bun install |
+| `scripts/check-smoke.js` | Node script | שער ST-04 (smoke סטטי) | ✅ | רשימת היתר מקומית: `/src/main.tsx`, `/assets/index-*.js` |
+| `.gitignore` | Config | node_modules/ dist/ .vly-run/ isolate/ | ✅ | isolate/ נוסף 2026-10-01 |
+
+**הוחרגו מקריאת תוכן (זוהו → סווגו → סיבה):** `dist/` (build artifact — אומת sha256 מול החי) · `isolate/` (עותק בייט-מדויק של ה-artifact — gitignored) · `.vly-run/` (runtime של Freebuff) · `node_modules/` · `.git/`.
 
 </div>

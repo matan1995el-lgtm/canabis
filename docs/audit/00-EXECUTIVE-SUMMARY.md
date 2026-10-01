@@ -45,4 +45,9 @@
 
 **Findings:** 🔴 1 (ידני, נותר) · 🟠 4 (תוקנו בקוד) · 🟡 8 · 🔵 7 · ⚪ 3.
 
+---
+
+## 📌 עדכון 2026-10-01 — Re-audit (מחזור שני, אחרי פריסה חיה)
+המערכת **חיה ב-production** מ-2026-09-28 ([canabis.freebuff.app](https://canabis.freebuff.app)) עם wrapper Vite·React סטטי (D-18/D-19) — ללא מגע בלוגיקה. Re-audit מלא (שער PASS · tsc PASS · artifact חי זהה ל-dist ב-sha256 · 1,420 שורות CRLF 100%): **אפס רגרסיות קוד**. 🔴 **FINDING-001 אומת מחדש בשטח:** למרות דיווח המשתמש על החלת rules, probes קריאה-בלבד מחזירים **200 ×3** — ה-rules לא בתוקף (חשד: Publish לא נלחץ / instance שגוי). החסם לשחרור אמיתי נותר זהה. ממצא תיעודי חדש FINDING-025 (ID.md מתיישן) — תוקן במחזור זה.
+
 </div>

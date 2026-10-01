@@ -19,6 +19,11 @@
 > - **OPEN-Q2 — עודכנה:** פרובת הכתיבה תתבצע כעת כבדיקת-אימות לאחר החלת ה-rules (בדיקות 401/403 — TEST-R08).
 > - **OPEN-Q1, Q3, Q4 — נותרות פתוחות** (תלויות בעלים).
 >
+> ### 🔄 Re-audit 2026-10-01
+> - **OPEN-Q3 — נסגרה:** יעד הפריסה מאומת — Freebuff Hosting, `https://canabis.freebuff.app` (mode static_vite, חי ב-production מ-2026-09-28; תהליך: docs/audit/26-DEPLOYMENT.md).
+> - **OPEN-Q2 — עודכנה:** לאחר דיווח המשתמש על החלת rules, probes ב-2026-10-01 החזירו עדיין 200 ×3 (TEST-R21) — ה-rules לא בתוקף. הבדיקה שלאחר החלה (TEST-R08) ממתינה ל-Publish בפועל על `panda-canabis-default-rtdb`.
+> - **OPEN-Q6 — נסגרה:** שער ST-04 (check-smoke.js) מכסה סטטית את ה-smoke; ה-HTML החי המוגש עובר את אותו שער (TEST-R14/R20). אימות אינטראקטיבי מלא (TASK-017) נותר באחריות המשתמש.
+>
 > ### 🔄 עדכון שלב השלמות (2026-09-25)
 > - **OPEN-Q1 — נסגרה מבחינת הצד המקבל:** חוזה ה-bridge מתועד במלואו ב-[docs/testing/EXTENSION-BRIDGE.md](../testing/EXTENSION-BRIDGE.md). נותר רק אימות E2E עם קוד התוסף עצמו (בבעלות המשתמש, מחוץ למאגר).
 > - **OPEN-Q3 — הובהרה חלקית:** יעדי פריסה תועדו והומלצו ב-[docs/audit/26-DEPLOYMENT.md](../audit/26-DEPLOYMENT.md) (TASK-015); ההחלטה בפועל בידי הבעלים.

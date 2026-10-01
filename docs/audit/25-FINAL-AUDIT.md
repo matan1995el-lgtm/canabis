@@ -9,6 +9,13 @@
 > **מסקנה:** כל ממצאי הקוד מה-Audit המקורי טופלו (ריכוז ב-07-BUGS המעודכן). ממצא חדש אחד זוהה ותוקן בשלב הביצוע (FINDING-024: `updatedAt: undefined` מפיל `set()`). **הממצא הקריטי 001 נותר פתוח בפועל** — הוא תלוי-Console ואינו ניתן לסגירה מהקוד; הצד-קוד שלו מושלם ומאומת (auth CDN + signInAnonymously + מיגרציה + path uid).
 > **Production Readiness:** נותר NOT READY עם **חסם יחיד ידני** (החלת rules + Anonymous ב-Console) — פירוט ב-22-PRODUCTION-READINESS המעודכן.
 > **שלב הבא:** TASK-001+002 ב-Console → smoke (SMOKE-CHECKLIST) → TASK-017/018.
+>
+> ### 🔄 Re-audit 2026-10-01 — אחרי פריסה חיה
+> **מה נבדק מחדש:** עץ מלא (43 קבצים — כולל wrapper D-18/D-19) · שער PASS · tsc PASS · probes חי (קריאה-בלבד) · sha256 של ה-HTML המוגש = dist · שלמות index.html (1,420 שורות, CRLF 100%). **אפס רגרסיות.**
+> **שינוי מצב מאז:** הפריסה חיה ב-Freebuff Hosting (canabis.freebuff.app); OPEN-Q3 נסגרה; OPEN-Q6 נסגרה (ST-04 + אימות HTML חי).
+> **🔴 FINDING-001 בפועל:** probes ב-2026-10-01 מחזירים 200 ×3 — ה-rules לא בתוקף על `panda-canabis-default-rtdb` למרות דיווח המשתמש; נדרש Publish ב-Console. TEST-R08 נותר פתוח.
+> **ממצא חדש:** FINDING-025 (סטיית תיעוד ID.md) — תוקן במחזור זה.
+> **Production Readiness:** הפריסה עצמה Ready; **שחרור למשתמש אמיתי חסום** עד rules בתוקף + Anonymous auth.
 
 ## מה נמצא
 מערכת מלאה ופונקציונלית בקובץ יחיד (`index.html`, ~1,418 שורות לאחר Execution, 100% נקרא) + README/ID/CLAUDE מלאים. SPA vanilla-JS עם Firebase RTDB לסנכרון ענן (auth אנונימי + listeners), Chart.js לגרפים (עם guard), RTL מלא, dark mode נשמר, responsive, יבוא/ייצוא JSON, עריכת זנים, וגשר לתוסף דפדפן חיצוני. אין build, אין CI; שער איכות: `scripts/check.sh`. 11 רכיבים פונקציונליים (COMP-001…011), 10 זרימות מופו (FLOW-001…010).

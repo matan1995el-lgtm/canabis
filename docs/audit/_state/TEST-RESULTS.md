@@ -63,4 +63,18 @@
 
 **סיכום Smoke חי:** Passed: 2 · Fail (ראיה ל-FINDING-001): 1 · Info: 1. חסימת שחרור נותרת TASK-002 צד-שרת (rules + Anonymous auth ב-Console).
 
+---
+
+## Re-audit 2026-10-01 — PANDA Deep Audit (מחזור שני)
+
+| TEST-ID | בדיקה | Command | Result | Output summary |
+|---|---|---|---|---|
+| TEST-R18 | שער האיכות המלא | `sh ./scripts/check.sh` | **PASS** | ST-01 (892 שורות JS) + ST-04 (30 ids · 16 handlers · 4 CDN · allowlist מקומי) + 16 בדיקות ST-02/03 |
+| TEST-R19 | Typecheck wrapper | `bunx tsc -p tsconfig.json` | **PASS** | אפס שגיאות |
+| TEST-R20 | זמינות פריסה + התאמת artifact | `curl` + `sha256sum` | **PASS** | אתר 200 (62,869b) · bundle 200 · sha256 של ה-HTML המושר = `dist/index.html` (`e545947d…`) |
+| TEST-R21 | RTDB probes קריאה-בלבד | `curl GET /.json`, `/strains.json`, `/connection_test.json` | **FAIL** (אבטחה — FINDING-001) | **200 ×3** ב-2026-10-01 (ריצה כפולה בתאריך, כולל אחרי השהיה) — למרות דיווח המשתמש על החלת rules: ה-rules לא בתוקף (חשד: Publish לא בוצע / instance שגוי). TEST-R08 נותר פתוח |
+| TEST-R22 | שלמות הקובץ הראשי | `wc -l` + `grep -c '\r'` | **PASS** | 1,420 שורות · 1,420 CRLF (100% נשמר); suppressCloudEcho ×4; escapeHtml ×10; כל הפונקציות הקריטיות בשורות 628–890 |
+
+**סיכום Re-audit 2026-10-01:** Passed: 4 · Fail (ראיה): 1 — אפס רגרסיות קוד. החסם היחיד נותר FINDING-001 בפועל.
+
 </div>

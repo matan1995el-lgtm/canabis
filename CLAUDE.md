@@ -8,7 +8,7 @@
 **מערכת ניהול קנאביס רפואי** — יישום דפדפן אישי לקטלוג זנים: ניהול, סטטיסטיקות, חיפוש, יבוא/ייצוא, וסנכרון ל-Firebase Realtime Database. שימוש אישי; ללא משתמשים-מנהלים; עברית/RTL מלא.
 
 ## 2. Architecture & Stack
-- **Single-file SPA** — הכול ב-`index.html` (~1,419 שורות): HTML + CSS מוטמע + JS inline (Vanilla ES6+, ללא פריימוורק). **סיומות שורה: CRLF — לשמר.**
+- **Single-file SPA** — הכול ב-`index.html` (~1,420 שורות): HTML + CSS מוטמע + JS inline (Vanilla ES6+, ללא פריימוורק). **סיומות שורה: CRLF — לשמר.**
 - **Persistence:** localStorage (`cannabisStrains`, `userKey` — legacy למיגרציה, `canabisDark`, `importedStrainData`) + Firebase RTDB compat SDK 10.7.1 (CDN gstatic, כולל **firebase-auth-compat.js**).
 - **גרפים:** Chart.js 4.4.0 (CDN jsdelivr, global `Chart`, עם guard ב-`renderStats`).
 - **פונטים:** Heebo (Google Fonts).
