@@ -50,4 +50,17 @@
 
 **סיכום השלמות:** Passed: 5 · אפס כשלים. TEST-R07 נותר BLOCKED לדפדפן אנושי; TEST-R08 PENDING ל-Console.
 
+---
+
+## Smoke חי — אימות פריסה בפרודקשן (2026-09-28, אימות חוזר 2026-10-01)
+
+| TEST-ID | בדיקה | Command | Result | Output summary |
+|---|---|---|---|---|
+| TEST-R14 | שער איכות על ה-HTML החי | `curl -sL https://canabis.freebuff.app/` + `sh ./scripts/check.sh` על התוצר המושר | **PASS** | HTTP 200 · 62,869 bytes · utf-8 · `dir="rtl"` · `#react-root` · ST-01+ST-04 PASS על ה-HTML המוגש; sha256 מושר = `dist/index.html` |
+| TEST-R15 | זמינות משאבי הפריסה | `curl -o /dev/null -w '%{http_code}'` על 6 משאבים | **PASS** | HTML · `/assets/index-DvyNu0Ef.js` · Heebo ×2 · chart.js@4.4.0 · firebase ×3 (10.7.1) — כולם 200 |
+| TEST-R16 | חשיפת RTDB לפני rules — תיעוד "לפני" של TEST-R08 | `curl GET /.json`, `/strains.json`, `/connection_test.json` (קריאות בלבד, אפס כתיבות) | **FAIL** (אבטחה — FINDING-001 מאומת בשטח) | שלושת ה-probes **200** בשני התאריכים; נתוני זנים אמיתיים חשופים (`user_1763501529060_*`); `connection_test` קיים. לאחר החלת rules — צפי 401 שייסגר כ-TEST-R08 |
+| TEST-R17 | עותק מקומי של ה-artifact (`isolate/`) | `sha256sum isolate/index.html dist/index.html /tmp/live.html` + assets | **INFO** | `isolate/` = עותק בייט-מדויק של ה-artifact הפרוס (HTML `e545947d…`, JS `47a0e302…` זהים ל-dist ולחי) — הוחלט לא לשלוח למאגר; `isolate/` נוסף ל-.gitignore (לא-הרסני) |
+
+**סיכום Smoke חי:** Passed: 2 · Fail (ראיה ל-FINDING-001): 1 · Info: 1. חסימת שחרור נותרת TASK-002 צד-שרת (rules + Anonymous auth ב-Console).
+
 </div>
