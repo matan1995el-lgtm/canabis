@@ -78,6 +78,7 @@
 **סיכום Re-audit 2026-10-01:** Passed: 4 · Fail (ראיה): 1 — אפס רגרסיות קוד. החסם היחיד נותר FINDING-001 בפועל.
 
 | TEST-R08 | אימות 401 אחרי "אישור" (ניסיון 4, 2026-10-01) | `curl GET /.json`, `/strains.json`, `/connection_test.json` (קריאות בלבד) | **FAIL** | **200 ×3** גם לאחר האישור — ה-rules לא אוכפים. TEST-R08 נותר פתוח |
+| TEST-R08 | אימות 401 (ניסיון 5, 2026-10-06 — אישור נוסף בצ'אט) | `curl GET` ×3 (קריאות בלבד) | **FAIL** | **200 ×3** שוב — אישור בצ'אט אינו פעולת Publish. הריצות 1–5 קבועות: ה-rules לא הוחלו בפועל ב-Console. נוספו probing נוסף עד אישור מפורש "לחצתי Publish וראיתי Permission denied" |
 
 | TEST-R08 | אימות 401 לאחר rules (ניסיון 3) | `curl GET /.json`, `/strains.json`, `/connection_test.json` (קריאות בלבד) | **FAIL** | לאחר שהמשתמש אישר Publish על `panda-canabis-default-rtdb`: **200 ×3 בפועל** — ה-rules עדיין לא אוכפים. השערות מדורגות: (1) עריכה בעורך **Cloud Firestore** במקום **Realtime Database** (שני מוצרים, שני עורכי rules נפרדים), (2) instance שגוי בבורר ה-DB, (3) ה-rules שפורסמו מכילים `.read: true` כלשהו. TEST-R08 נותר פתוח |
 
