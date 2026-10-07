@@ -322,17 +322,173 @@
         font-size: 16px; /* Prevents zoom on focus in iOS */
       }
     }
+
+    /* ---------- UI UPLIFT (2026-10-07): professional polish layer ---------- */
+    :root{
+      --border:#dde9e0;
+      --muted:#6f8377;
+      --shadow: rgba(15,40,26,0.10);
+      --card-radius:18px;
+    }
+    .dark{
+      --bg-main:#0a111c;
+      --bg-card:#121f30;
+      --bg-accent:#0d1826;
+      --text-secondary:#a8c2b2;
+      --border:rgba(255,255,255,0.10);
+      --glass:rgba(18,31,48,0.72);
+      --shadow: rgba(0,0,0,0.55);
+    }
+    html, body{
+      background:
+        radial-gradient(1100px 420px at 50% -120px, rgba(102,187,106,0.10), transparent 70%),
+        var(--bg-main);
+    }
+    h1{
+      font-size:clamp(1.9rem, 4vw, 2.7rem);
+      font-weight:800;
+      letter-spacing:-0.02em;
+    }
+    .title-text{
+      background:linear-gradient(90deg, #2e7d32, #66bb6a 55%, #26a69a);
+      -webkit-background-clip:text;
+      background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    .title-leaf{ -webkit-text-fill-color:initial; }
+    .subtitle{
+      width:fit-content;
+      margin:6px auto 26px;
+      padding:8px 18px;
+      border-radius:999px;
+      background:var(--glass);
+      border:1px solid var(--border);
+      color:var(--text-secondary);
+      font-weight:500;
+    }
+    .sync-status{
+      top:16px;
+      right:16px;
+      padding:8px 14px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--glass);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      font-size:0.85rem;
+      font-weight:600;
+      box-shadow:0 6px 20px -8px var(--shadow);
+    }
+    .sync-status.synced{ color:#2e7d32; }
+    .sync-status.syncing{ color:#b26a00; }
+    .sync-status.offline{ color:#c0564f; }
+    .dark .sync-status.synced{ color:#81c784; }
+    .dark .sync-status.syncing{ color:#ffb74d; }
+    .dark .sync-status.offline{ color:#ef9a9a; }
+    .tabs{
+      width:fit-content;
+      margin:0 auto 26px;
+      padding:6px;
+      gap:6px;
+      background:var(--glass);
+      border:1px solid var(--border);
+      border-radius:16px;
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      box-shadow:0 10px 30px -18px var(--shadow);
+    }
+    .tab-btn{
+      padding:9px 18px;
+      border-radius:11px;
+      background:transparent;
+      border:1px solid transparent;
+      font-size:0.95rem;
+    }
+    .tab-btn:hover{ transform:translateY(-1px); box-shadow:none; background:var(--bg-card); }
+    .tab-btn.active{
+      background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color:#fff;
+      box-shadow:0 8px 22px -8px rgba(102,187,106,0.5);
+    }
+    .card{
+      padding:22px;
+      border:1px solid var(--border);
+      box-shadow:0 18px 40px -24px var(--shadow);
+    }
+    .card h2{ font-size:1.25rem; margin-bottom:14px; letter-spacing:-0.01em; }
+    .btn{ padding:11px 16px; border-radius:12px; font-size:0.95rem; }
+    .btn:hover{ transform:translateY(-2px); }
+    .btn:active{ transform:translateY(0); }
+    .btn-primary{ background:linear-gradient(135deg, var(--primary), var(--primary-dark)); box-shadow:0 8px 22px -8px rgba(102,187,106,0.55); }
+    .btn-primary:hover{ background:linear-gradient(135deg, var(--primary-dark), var(--primary)); }
+    .btn-secondary{
+      background:var(--bg-card);
+      color:var(--text-main);
+      border:1px solid var(--border);
+      box-shadow:0 2px 10px -6px var(--shadow);
+    }
+    .btn-secondary:hover{ border-color:var(--primary); }
+    .btn-danger{ background:linear-gradient(135deg, #ef5350, #d32f2f); box-shadow:0 8px 22px -10px rgba(239,83,80,0.6); }
+    .settings-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(310px, 1fr)); gap:16px; }
+    .settings-card{ margin-bottom:0; display:flex; flex-direction:column; gap:12px; }
+    .settings-card h3{ margin:0; color:var(--primary); font-size:1.05rem; }
+    .settings-hint{ margin:0; color:var(--muted); font-size:0.9rem; line-height:1.6; }
+    .settings-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:auto; }
+    .switch-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; cursor:pointer; padding:4px 0; }
+    .switch-row strong{ display:block; font-weight:600; color:var(--text-main); }
+    .switch-row small{ display:block; color:var(--muted); font-weight:400; margin-top:2px; }
+    .switch{ position:relative; width:48px; height:27px; flex:none; display:inline-block; }
+    .switch input{ position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; }
+    .switch i{ position:absolute; inset:0; border-radius:999px; background:var(--border); transition:background .2s ease; pointer-events:none; }
+    .switch i::before{ content:''; position:absolute; top:3px; inset-inline-start:3px; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.25); transition:transform .2s ease; }
+    .switch input:checked + i{ background:var(--primary); }
+    .switch input:checked + i::before{ transform:translateX(-21px); }
+    .switch input:focus-visible + i{ box-shadow:var(--focus-ring); }
+    .danger-zone{ border-color:rgba(244,67,54,0.28); background:linear-gradient(180deg, rgba(244,67,54,0.05), transparent 40%), var(--bg-card); }
+    .danger-zone h3{ color:var(--danger); }
+    .chart-wrap{ position:relative; height:340px; max-width:760px; margin:10px auto 0; }
+    #thcCbdChart{ max-width:none; margin:0; padding:0; background:transparent; border:none; box-shadow:none; }
+    .stats-grid{ margin-top:18px; }
+    .stat-card{
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px 14px 16px;
+      box-shadow:0 10px 24px -18px var(--shadow);
+      position:relative;
+      overflow:hidden;
+      transition:transform .18s ease, box-shadow .18s ease;
+    }
+    .stat-card:hover{ transform:translateY(-3px); box-shadow:0 16px 30px -18px var(--shadow); }
+    .stat-card::before{ content:''; position:absolute; top:0; inset-inline:0; height:3px; background:linear-gradient(90deg, var(--primary), transparent); }
+    .stat-icon{ font-size:1.35rem; line-height:1; margin-bottom:6px; }
+    .stat-value{ font-size:1.9rem; letter-spacing:-0.02em; }
+    .stat-label{ color:var(--muted); font-size:0.86rem; margin-top:4px; }
+    .empty-state{ padding:34px 20px; border:1px dashed var(--border); border-radius:14px; background:var(--glass); font-weight:500; }
+    @media (max-width: 768px) {
+      .card{ padding:16px; }
+      .tabs{ max-width:100%; }
+      .tab-btn{ padding:8px 10px; font-size:0.85rem; }
+      .btn{ padding:12px 16px; }
+      .sync-status{ top:10px; right:10px; padding:6px 12px; font-size:0.8rem; }
+      .chart-wrap{ height:240px; }
+      .stats-grid{ gap:10px; }
+      .stat-value{ font-size:1.6rem; }
+      .stat-icon{ font-size:1.15rem; }
+      .settings-grid{ grid-template-columns:1fr; }
+      .subtitle{ margin-bottom:18px; }
+    }
   </style>
 </head>
 <body>
   <div class="container" role="main">
-    <h1>🌿 מערכת ניהול קנאביס רפואי</h1>
+    <h1><span class="title-leaf">🌿</span> <span class="title-text">מערכת ניהול קנאביס רפואי</span></h1>
     <p class="subtitle">נהל, עקוב והשווה בין זני קנאביס רפואי - מסונכרן בענן 🔄</p>
 
     <!-- sync status -->
     <div id="syncStatus" class="sync-status offline" aria-live="polite" role="status">
       <span class="sync-dot"></span>
-      <span id="syncText">● מצב: לא מחובר</span>
+      <span id="syncText">לא מחובר לענן</span>
     </div>
 
     <!-- tabs -->
@@ -361,8 +517,9 @@
     <div id="statsTab" class="tab-content" role="tabpanel" aria-hidden="true">
       <div class="card">
         <h2>📈 סטטיסטיקות מתקדמות</h2>
-        <canvas id="thcCbdChart" height="140" role="img" aria-label="גרף ממוצע THC ו CBD"></canvas>
-        <div id="statsContent" class="stats-grid" style="margin-top:16px;"></div>
+        <p class="settings-hint">מדדים וגרפים מחושבים מכל הזנים שבמערכת — מתעדכן בזמן אמת.</p>
+        <div class="chart-wrap"><canvas id="thcCbdChart" role="img" aria-label="גרף ממוצע THC ו CBD"></canvas></div>
+        <div id="statsContent" class="stats-grid"></div>
       </div>
     </div>
 
@@ -382,33 +539,49 @@
 
     <!-- SETTINGS TAB -->
     <div id="settingsTab" class="tab-content" role="tabpanel" aria-hidden="true">
-      <div class="card">
-        <h2>⚙️ הגדרות וסנכרון</h2>
-
-        <h3 style="margin-top:6px;">☁️ סנכרון ענן</h3>
-        <p style="color:var(--text-secondary); margin-bottom:8px;">המערכת יכולה לסנכרן לעתים קרובות עם Firebase</p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-          <button class="btn btn-primary" onclick="forceSyncNow()">🔄 סנכרן עכשיו</button>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <label for="toggleDark" style="font-weight:600; color:var(--text-secondary);">מצב כהה</label>
-            <input id="toggleDark" type="checkbox" aria-label="הפעל מצב כהה" onchange="toggleDarkMode(event)">
+      <div class="settings-grid">
+        <section class="card settings-card">
+          <h3>☁️ סנכרון ענן</h3>
+          <p class="settings-hint">הקטלוג מסתנכרן אוטומטית מול Firebase דרך חשבון אנונימי מאובטח, עם מנגנון מנע-דריסה.</p>
+          <div class="settings-actions">
+            <button class="btn btn-primary" onclick="forceSyncNow()">🔄 סנכרן עכשיו</button>
           </div>
-        </div>
+        </section>
 
-        <h3 style="margin-top:18px;">📤 שיתוף וגיבוי</h3>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
-          <button class="btn btn-primary" onclick="shareWhatsApp()">📱 WhatsApp</button>
-          <button class="btn btn-primary" onclick="shareEmail()">📧 Email</button>
-          <button class="btn btn-primary" onclick="copyLink()">📋 העתק קישור</button>
-          <button class="btn btn-export" onclick="exportData()">💾 ייצוא JSON</button>
-          <button class="btn btn-import" onclick="document.getElementById('importFile').click()">📥 ייבוא</button>
-          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-        </div>
+        <section class="card settings-card">
+          <h3>🌓 תצוגה</h3>
+          <label class="switch-row" for="toggleDark">
+            <span>
+              <strong>מצב כהה</strong>
+              <small>נוח לשימוש בלילה — ההגדרה נשמרת בין ביקורים</small>
+            </span>
+            <span class="switch">
+              <input id="toggleDark" type="checkbox" aria-label="הפעל מצב כהה" onchange="toggleDarkMode(event)">
+              <i></i>
+            </span>
+          </label>
+        </section>
 
-        <h3 style="margin-top:18px;">🗑️ ניהול נתונים</h3>
-        <div style="display:flex; gap:10px;">
-          <button class="btn btn-danger" onclick="clearAllData()">מחק את כל הנתונים</button>
-        </div>
+        <section class="card settings-card">
+          <h3>📤 גיבוי ושיתוף</h3>
+          <p class="settings-hint">ייצוא JSON הוא הגיבוי המלא של הקטלוג — מומלץ לשמור מחוץ למכשיר מדי פעם.</p>
+          <div class="settings-actions">
+            <button class="btn btn-export" onclick="exportData()">💾 ייצוא JSON</button>
+            <button class="btn btn-import" onclick="document.getElementById('importFile').click()">📥 ייבוא</button>
+            <button class="btn btn-secondary" onclick="shareWhatsApp()">📱 WhatsApp</button>
+            <button class="btn btn-secondary" onclick="shareEmail()">📧 Email</button>
+            <button class="btn btn-secondary" onclick="copyLink()">📋 העתק קישור</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+          </div>
+        </section>
+
+        <section class="card settings-card danger-zone">
+          <h3>⚠️ ניהול נתונים</h3>
+          <p class="settings-hint">מחיקה גורפת של כל הזנים. לפני הפעולה נשמר גיבוי אוטומטי, אך אין שחזור מהענן.</p>
+          <div class="settings-actions">
+            <button class="btn btn-danger" onclick="clearAllData()">🗑️ מחק את כל הנתונים</button>
+          </div>
+        </section>
       </div>
     </div>
   </div>
@@ -599,7 +772,7 @@
           if(snap.val() === true){
             updateSyncStatus(authUid ? 'synced' : 'syncing', authUid ? 'מחובר לענן' : 'מתחבר...');
           } else {
-            updateSyncStatus('offline', 'מצב מקומי (לא מחובר)');
+            updateSyncStatus('offline', 'לא מחובר לענן');
           }
         });
 
@@ -710,7 +883,7 @@
         updateSyncStatus('offline', 'מסד נתונים לא קיים - צור Realtime Database');
         showNotification('❌ צריך ליצור Realtime Database ב-Firebase Console');
       } else {
-        updateSyncStatus('offline', 'מצב מקומי (לא מחובר)');
+        updateSyncStatus('offline', 'לא מחובר לענן');
       }
 
       // Load from local data anyway
@@ -819,7 +992,7 @@
       const t = document.getElementById('syncText');
       if(s) {
         s.className = `sync-status ${status}`;
-        if(t) t.textContent = `● ${text}`;
+        if(t) t.textContent = text;
       }
     }
 
@@ -854,7 +1027,7 @@
           }
         }
         expectCloudShrink = false;
-        updateSyncStatus('syncing', 'מסנכרן...');
+        updateSyncStatus('syncing', 'מסנכרן…');
         suppressCloudEcho++; // skip our own echo; overlapping saves each get their own skip
         const payload = strains.map(s => ({ ...s }));
         db.ref(`strains/${authUid}`).set(payload)
@@ -1235,13 +1408,23 @@
 
       // Render stat cards
       const statsContent = document.getElementById('statsContent');
+      const chartCanvas = document.getElementById('thcCbdChart');
       statsContent.innerHTML = `
-        <div class="stat-card"><div class="stat-value">${strains.length}</div><div class="stat-label">זנים במערכת</div></div>
-        <div class="stat-card"><div class="stat-value">${avgTHC}%</div><div class="stat-label">THC ממוצע</div></div>
-        <div class="stat-card"><div class="stat-value">${avgCBD}%</div><div class="stat-label">CBD ממוצע</div></div>
-        <div class="stat-card"><div class="stat-value">₪${avgPrice}</div><div class="stat-label">מחיר ממוצע</div></div>
-        <div class="stat-card"><div class="stat-value">${avgRating} ⭐</div><div class="stat-label">דירוג ממוצע</div></div>
+        <div class="stat-card"><div class="stat-icon">🌿</div><div class="stat-value">${strains.length}</div><div class="stat-label">זנים במערכת</div></div>
+        <div class="stat-card"><div class="stat-icon">🧪</div><div class="stat-value">${avgTHC}%</div><div class="stat-label">THC ממוצע</div></div>
+        <div class="stat-card"><div class="stat-icon">💧</div><div class="stat-value">${avgCBD}%</div><div class="stat-label">CBD ממוצע</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">₪${avgPrice}</div><div class="stat-label">מחיר ממוצע</div></div>
+        <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-value">${avgRating}</div><div class="stat-label">דירוג ממוצע</div></div>
       `;
+
+      // Empty state: no strains yet → skip the chart entirely
+      if(strains.length === 0){
+        if(thcCbdChart){ thcCbdChart.destroy(); thcCbdChart = null; }
+        if(chartCanvas) chartCanvas.style.display = 'none';
+        statsContent.insertAdjacentHTML('beforeend', '<p class="empty-state" style="grid-column:1/-1;">📊 אין עדיין זנים במערכת — הוסיפו זנים כדי לראות גרף ומדדים</p>');
+        return;
+      }
+      if(chartCanvas) chartCanvas.style.display = '';
 
       // Chart.js guard (TASK-007): CDN blocked → metrics still shown, no crash
       if(typeof Chart === 'undefined'){
@@ -1284,11 +1467,12 @@
             title:{ display:true, text:'ממוצע THC ו-CBD בכלל הזנים', color: textMain, padding: { top: 8, bottom: 8 } }
           },
           scales:{
-            x:{ ticks:{ color: textSecondary } },
+            x:{ ticks:{ color: textSecondary }, grid:{ display:false } },
             y:{
               beginAtZero:true,
               suggestedMax: Math.max(30, Number(avgTHC)+10),
-              ticks:{ color: textSecondary }
+              ticks:{ color: textSecondary, precision:0 },
+              grid:{ color: 'rgba(128,148,136,0.15)' }
             }
           }
         }
@@ -1343,7 +1527,7 @@
     /* ========== SYNC ACTION ========== */
     function forceSyncNow(){
       if(db && authUid){
-        updateSyncStatus('syncing','מסנכרן...');
+        updateSyncStatus('syncing','מסנכרן…');
         saveData();
         showNotification('🔄 מסנכרן עכשיו...');
       } else {
