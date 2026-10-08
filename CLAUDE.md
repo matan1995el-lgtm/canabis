@@ -8,7 +8,7 @@
 **מערכת ניהול קנאביס רפואי** — יישום דפדפן אישי לקטלוג זנים: ניהול, סטטיסטיקות, חיפוש, יבוא/ייצוא, וסנכרון ל-Firebase Realtime Database. שימוש אישי; ללא משתמשים-מנהלים; עברית/RTL מלא.
 
 ## 2. Architecture & Stack
-- **Single-file SPA** — הכול ב-`index.html` (~1,420 שורות): HTML + CSS מוטמע + JS inline (Vanilla ES6+, ללא פריימוורק). **סיומות שורה: CRLF — לשמר.**
+- **Single-file SPA** — הכול ב-`index.html` (~2,320 שורות): HTML + CSS מוטמע + JS inline (Vanilla ES6+, ללא פריימוורק). **סיומות שורה: CRLF — לשמר.**
 - **Persistence:** localStorage (`cannabisStrains`, `userKey` — legacy למיגרציה, `canabisDark`, `importedStrainData`) + Firebase RTDB compat SDK 10.7.1 (CDN gstatic, כולל **firebase-auth-compat.js**).
 - **גרפים:** Chart.js 4.4.0 (CDN jsdelivr, global `Chart`, עם guard ב-`renderStats`).
 - **פונטים:** Heebo (Google Fonts).
@@ -31,7 +31,7 @@
 | 1310–1419 | טאבים, מודל, שיתוף, מחיקה, dark mode, init |
 
 ## 4. Components (מזהים) & Critical Flows
-**רכיבים:** COMP-001 Shell/CSS · 002 Tabs (`switchTab`) · 003 DataLayer (`strains`, `saveData`, `loadData`, `loadFromLocalStorage`) · 004 Table (`renderStrains`) · 005 Firebase (`initializeFirebase`, `signInAnonymously`, `migrateLegacyDataIfNeeded`, `attachCloudListener`, `sanitizeCloudData`, `handleFirebaseError`) · 006 Extension bridge · 007 Stats (`renderStats` + guard) · 008 Search (`performSearch`) · 009 Modal/form (`addStrain`/`editStrain`) · 010 Import/Export · 011 SyncStatus · 012 Strain detail page (`viewStrain` → hash route `#/strain/{id}`, עמוד מלא פר-זן, deep link, נפתח/נסגר גם ב-back של הדפדפן).
+**רכיבים:** COMP-001 Shell/CSS · 002 Tabs (`switchTab`) · 003 DataLayer (`strains`, `saveData`, `loadData`, `loadFromLocalStorage`) · 004 Table + Cards (`renderStrains` — טבלה/כרטיסים לפי `canabisViewMode`, persist) · 005 Firebase (`initializeFirebase`, `signInAnonymously`, `migrateLegacyDataIfNeeded`, `attachCloudListener`, `sanitizeCloudData`, `handleFirebaseError`) · 006 Extension bridge · 007 Stats (`renderStats` + guard) · 008 Search (`performSearch`) · 009 Modal/form (`addStrain`/`editStrain`) · 010 Import/Export · 011 SyncStatus · 012 Strain detail page (`viewStrain` → hash route `#/strain/{id}`, עמוד מלא פר-זן, deep link, נפתח/נסגר גם ב-back של הדפדפן, **ניווט הבא/הקודם** `gotoNextStrain`/`gotoPrevStrain` + מקלדת) · 013 Sample catalog (`SAMPLE_DATA` — 60 זנים אמיתיים Leafly).
 
 **זרימות קריטיות:**
 1. **הוספה/עריכה:** form → `addStrain()` (או `editStrain()` למילוי) → `strains.push`/עדכון לפי `id` → `saveData()` (local + cloud `set()` מלא עם מנגנון מנע-דריסה) → `renderStrains()`.
