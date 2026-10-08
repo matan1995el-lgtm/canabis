@@ -446,6 +446,67 @@
     .switch input:focus-visible + i{ box-shadow:var(--focus-ring); }
     .danger-zone{ border-color:rgba(244,67,54,0.28); background:linear-gradient(180deg, rgba(244,67,54,0.05), transparent 40%), var(--bg-card); }
     .danger-zone h3{ color:var(--danger); }
+    /* ---------- VISUAL CATALOG CARDS (view mode: cards) ---------- */
+    .view-toggle{ display:flex; gap:8px; justify-content:center; margin-bottom:14px; }
+    .view-btn{
+      padding:8px 18px; border-radius:999px; cursor:pointer;
+      background:var(--glass); border:1px solid var(--border);
+      font-family:'Heebo',sans-serif; font-weight:600; color:var(--text-main);
+      transition:all .18s ease;
+    }
+    .view-btn:hover{ transform:translateY(-2px); box-shadow:0 6px 16px var(--shadow); }
+    .view-btn.active{ background:linear-gradient(90deg,var(--primary),var(--primary-dark)); color:#fff; border-color:transparent; }
+    .cards-grid{
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+      gap:18px;
+    }
+    .strain-card-sfc{
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px 18px 16px;
+      box-shadow:0 6px 26px var(--shadow);
+      cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      display:flex; flex-direction:column; gap:10px;
+      position:relative; overflow:hidden;
+    }
+    .strain-card-sfc::before{ content:''; position:absolute; top:0; inset-inline:0; height:4px; }
+    .card-sfc-indica::before{ background:linear-gradient(90deg,#7e57c2,#4527a0); }
+    .card-sfc-sativa::before{ background:linear-gradient(90deg,#ffb300,#f57c00); }
+    .card-sfc-hybrid::before{ background:linear-gradient(90deg,var(--primary),var(--primary-dark)); }
+    .strain-card-sfc:hover{ transform:translateY(-4px); box-shadow:0 14px 34px -14px var(--shadow); border-color:var(--primary); }
+    .strain-card-sfc:focus-visible{ outline:none; box-shadow:var(--focus-ring); }
+    .sfc-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .sfc-rating{ font-size:0.9rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sfc-name{ margin:0; font-size:1.3rem; color:var(--text-main); }
+    .sfc-name a{ text-decoration:none; color:var(--primary); }
+    .sfc-meters{ display:flex; flex-direction:column; gap:6px; }
+    .sfc-meter{ display:flex; align-items:center; gap:8px; font-size:0.85rem; }
+    .sfc-meter-label{ width:38px; font-weight:600; color:var(--text-secondary); }
+    .sfc-bar{ flex:1; height:8px; background:var(--glass); border-radius:99px; overflow:hidden; }
+    .sfc-bar i{ display:block; height:100%; background:linear-gradient(90deg,var(--primary-dark),var(--primary)); border-radius:99px; }
+    .sfc-bar-cbd i{ background:linear-gradient(90deg,#1e88e5,#42a5f5); }
+    .sfc-meter-val{ width:52px; text-align:end; color:var(--text-main); font-weight:600; }
+    .sfc-effects{ margin:0; color:var(--text-secondary); font-size:0.9rem; line-height:1.5; }
+    .sfc-terps{ display:flex; flex-wrap:wrap; gap:6px; }
+    .card-terp{ background:var(--bg-accent); color:var(--primary-dark); padding:3px 10px; border-radius:999px; font-size:0.75rem; font-weight:600; border:1px solid var(--border); }
+    .sfc-meta{ display:flex; flex-wrap:wrap; gap:6px; }
+    .sfc-pill{ background:var(--glass); border:1px solid var(--border); padding:4px 10px; border-radius:999px; font-size:0.78rem; color:var(--text-secondary); white-space:nowrap; }
+    .sfc-actions{ display:flex; gap:6px; margin-top:auto; padding-top:8px; border-top:1px dashed var(--border); }
+
+    /* ---------- STRAIN PAGE PREV/NEXT NAVIGATION ---------- */
+    .strain-page-nav{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:12px; margin:0 0 18px;
+      background:var(--glass); border:1px solid var(--border); border-radius:14px;
+      flex-wrap:wrap;
+    }
+    .strain-nav-btn{ font-size:0.9rem; }
+    .strain-nav-btn.strain-nav-disabled{ color:var(--muted); font-size:0.85rem; }
+    .strain-nav-pos{ font-weight:700; color:var(--text-secondary); font-size:0.9rem; white-space:nowrap; }
+
+    /* ---------- CHART WRAP (unchanged height logic) ---------- */
     .chart-wrap{ position:relative; height:340px; max-width:760px; margin:10px auto 0; }
     #thcCbdChart{ max-width:none; margin:0; padding:0; background:transparent; border:none; box-shadow:none; }
     .stats-grid{ margin-top:18px; }
@@ -472,6 +533,10 @@
       .btn{ padding:12px 16px; }
       .sync-status{ top:10px; right:10px; padding:6px 12px; font-size:0.8rem; }
       .chart-wrap{ height:240px; }
+      .cards-grid{ grid-template-columns:1fr; }
+      .strain-page-nav{ flex-direction:column; align-items:stretch; }
+      .strain-nav-btn{ text-align:center; justify-content:center; }
+      .strain-nav-pos{ text-align:center; }
       .stats-grid{ gap:10px; }
       .stat-value{ font-size:1.6rem; }
       .stat-icon{ font-size:1.15rem; }
@@ -765,22 +830,364 @@
 
     const SAMPLE_DATA = [
       {
-        id:101, name:"Blue Dream", type:"hybrid", potency:"מאוזנת", price:380,
-        dosage:"0.2-0.5 גרם", thc:18.5, cbd:0.8, country:"ארה\"ב", importer:"טוקן",
-        terpenes:"Myrcene, Pinene, Caryophyllene", effects:"מעולה לשימוש יומיומי, משלב אנרגיה והרפיה.", rating:5,
-        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"זן פופולרי מאוד", createdAt:"2025-11-19T00:00:00Z"
+        id:2000, name:"Blue Dream", type:"hybrid", potency:"מאוזנת", price:380,
+        dosage:"0.2-0.5 גרם", thc:18.5, cbd:0.8, country:"קנדה", importer:"טוקן",
+        terpenes:"Myrcene, Pinene, Caryophyllene", effects:"משלב הרפייה עדינה עם הרמה מוחית — מתאים לשימוש יומיומי.", rating:5,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Blueberry × Haze — זן הדגל של קליפורניה ואחד הנצפים בעולם.", createdAt:"2025-12-01T09:00:00.000Z"
       },
       {
-        id:102, name:"Northern Lights", type:"indica", potency:"גבוהה", price:420,
-        dosage:"0.1-0.3 גרם", thc:22.0, cbd:0.3, country:"הולנד", importer:"בי.או.אל",
-        terpenes:"Myrcene, Linalool, Pinene", effects:"מרגיע מאוד, מתאים לשינה.", rating:4,
-        pharmacies:["ניו-פארם"], notes:"זן אינדיקה קלאסי", createdAt:"2025-11-19T00:01:00Z"
+        id:2001, name:"Northern Lights", type:"indica", potency:"גבוהה", price:420,
+        dosage:"0.1-0.3 גרם", thc:22, cbd:0.3, country:"הולנד", importer:"בי.או.אל",
+        terpenes:"Myrcene, Linalool, Pinene", effects:"הרגעת שרירים עמוקה ומנוחה — מצוין לשינה.", rating:5,
+        pharmacies:["ניו-פארם"], notes:"Afghani × Thai — אגדה משנות ה-80 שגודלה בהולנד (Sensi Seeds).", createdAt:"2025-12-01T10:00:00.000Z"
       },
       {
-        id:103, name:"Sour Diesel", type:"sativa", potency:"גבוהה", price:350,
-        dosage:"0.2-0.4 גרם", thc:20.1, cbd:0.2, country:"הולנד", importer:"IMC",
-        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"אנרגיה, יצירתיות", rating:4,
-        pharmacies:["טבע אנד סאן"], notes:"זן סאטיבה אנרגטי", createdAt:"2025-11-19T00:02:00Z"
+        id:2002, name:"Sour Diesel", type:"sativa", potency:"גבוהה", price:350,
+        dosage:"0.2-0.4 גרם", thc:20.1, cbd:0.2, country:"קליפורניה", importer:"IMC",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"אנרגיה מיידית ופוקוס — ריח דיזל חריף.", rating:4,
+        pharmacies:["טבע אנד סאן"], notes:"Chemdog × Super Skunk — אחד הסאטיבות המזוהים בעולם.", createdAt:"2025-12-01T11:00:00.000Z"
+      },
+      {
+        id:2003, name:"OG Kush", type:"hybrid", potency:"גבוהה", price:400,
+        dosage:"0.15-0.35 גרם", thc:21.5, cbd:0.1, country:"קנדה", importer:"סבן",
+        terpenes:"Myrcene, Limonene, Caryophyllene", effects:"הרגעה כבדה עם אופוריה — אבן היסוד של ההייברידים המערביים.", rating:5,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"ממוצע מסתורי; כנראה Hindu Kush × Chemdog × Lemon Thai.", createdAt:"2025-12-01T12:00:00.000Z"
+      },
+      {
+        id:2004, name:"GSC", type:"hybrid", potency:"גבוהה", price:450,
+        dosage:"0.2-0.5 גרם", thc:23, cbd:0.5, country:"קנדה", importer:"טוקן",
+        terpenes:"Caryophyllene, Limonene, Humulene", effects:"אופוריה מתוקה עם הרגעת גוף; טעם עוגיות-חמאה.", rating:5,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"OG Kush × Durban Poison — פתח את עידן ה-dessert strains.", createdAt:"2025-12-01T13:00:00.000Z"
+      },
+      {
+        id:2005, name:"Original Glue (GG4)", type:"hybrid", potency:"גבוהה", price:430,
+        dosage:"0.1-0.3 גרם", thc:24.5, cbd:0.1, country:"קנדה", importer:"בי.או.אל",
+        terpenes:"Caryophyllene, Myrcene, Limonene", effects:"אפקט ‘דבק לספה’ ידוע; פוטנטי מאוד.", rating:5,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Chem's Sister × Sour Dubb × Chocolate Diesel.", createdAt:"2025-12-01T14:00:00.000Z"
+      },
+      {
+        id:2006, name:"Wedding Cake", type:"hybrid", potency:"גבוהה", price:440,
+        dosage:"0.2-0.4 גרם", thc:24, cbd:0.5, country:"קנדה", importer:"IMC",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"הרגעה עשירה עם מתיקות ונגיעת מנטה.", rating:5,
+        pharmacies:["ניו-פארם"], notes:"Triangle Kush × Animal Mints — זן השנה 2019 ב-Leafly.", createdAt:"2025-12-01T15:00:00.000Z"
+      },
+      {
+        id:2007, name:"Gelato", type:"hybrid", potency:"גבוהה", price:450,
+        dosage:"0.15-0.35 גרם", thc:22.5, cbd:0.3, country:"קנדה", importer:"סבן",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"אופוריה יצירתית עם טעם קינוח איטלקי.", rating:5,
+        pharmacies:["טבע אנד סאן"], notes:"Sunset Sherbet × Thin Mint GSC — זן השנה 2018.", createdAt:"2025-12-01T16:00:00.000Z"
+      },
+      {
+        id:2008, name:"Granddaddy Purple", type:"indica", potency:"גבוהה", price:410,
+        dosage:"0.2-0.5 גרם", thc:23.5, cbd:0.1, country:"הולנד", importer:"טוקן",
+        terpenes:"Myrcene, Caryophyllene, Pinene", effects:"הרדמה עדינה לשינה; כימרה סגולה יפהפייה.", rating:5,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"Purple Urkle × Big Bud — מלך האינדיקות הסגולות.", createdAt:"2025-12-01T17:00:00.000Z"
+      },
+      {
+        id:2009, name:"Purple Punch", type:"indica", potency:"גבוהה", price:390,
+        dosage:"0.1-0.3 גרם", thc:20, cbd:0.2, country:"הולנד", importer:"בי.או.אל",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"נעימה ונדיבה — כמעט כמו משקה פונץ' סגול.", rating:4,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"Larry OG × Granddaddy Purple.", createdAt:"2025-12-01T18:00:00.000Z"
+      },
+      {
+        id:2010, name:"Do-Si-Dos", type:"indica", potency:"גבוהה", price:460,
+        dosage:"0.2-0.4 גרם", thc:26, cbd:0.1, country:"הולנד", importer:"IMC",
+        terpenes:"Limonene, Caryophyllene, Linalool", effects:"מנוחת OG עוצמתית עם שכבת קריסטלים קפואה.", rating:5,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Face-Off OG × OGKB — אחד הגדולים של העשור.", createdAt:"2025-12-01T19:00:00.000Z"
+      },
+      {
+        id:2011, name:"Ice Cream Cake", type:"indica", potency:"גבוהה", price:420,
+        dosage:"0.15-0.35 גרם", thc:23, cbd:0.2, country:"הולנד", importer:"סבן",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"מתוק ונעים לפני השינה; ריח וניל ברור.", rating:4,
+        pharmacies:["ניו-פארם"], notes:"Wedding Cake × Gelato #33.", createdAt:"2025-12-01T20:00:00.000Z"
+      },
+      {
+        id:2012, name:"Slurricane", type:"indica", potency:"גבוהה", price:430,
+        dosage:"0.2-0.5 גרם", thc:24, cbd:0.2, country:"הולנד", importer:"טוקן",
+        terpenes:"Caryophyllene, Myrcene, Limonene", effects:"צבע ענבים גז עם הרגעה עמוקה ומתמשכת.", rating:4,
+        pharmacies:["טבע אנד סאן"], notes:"Do-Si-Dos × Purple Punch.", createdAt:"2025-12-01T21:00:00.000Z"
+      },
+      {
+        id:2013, name:"Apple Fritter", type:"hybrid", potency:"גבוהה", price:450,
+        dosage:"0.1-0.3 גרם", thc:25, cbd:0.1, country:"קנדה", importer:"בי.או.אל",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"פוטנטי ומתוק — טעם תפוח אפוי.", rating:5,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"מקור לא ידוע במלואו; פוטנטי ומזוהה.", createdAt:"2025-12-01T22:00:00.000Z"
+      },
+      {
+        id:2014, name:"Peanut Butter Breath", type:"hybrid", potency:"גבוהה", price:440,
+        dosage:"0.2-0.4 גרם", thc:22, cbd:0.2, country:"קנדה", importer:"IMC",
+        terpenes:"Limonene, Caryophyllene, Humulene", effects:"טעם חמאת בוטנים מלוח עם נחיתה רכה.", rating:4,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"Do-Si-Dos × Mendo Breath — חלוץ טרנד הזנים האגוזיים.", createdAt:"2025-12-01T23:00:00.000Z"
+      },
+      {
+        id:2015, name:"Grape Ape", type:"indica", potency:"בינונית", price:360,
+        dosage:"0.15-0.35 גרם", thc:18, cbd:0.5, country:"הולנד", importer:"סבן",
+        terpenes:"Myrcene, Caryophyllene, Pinene", effects:"ריח ענבים עדין והרגעה מלאה.", rating:4,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Mendocino Purps × Skunk × Afghani.", createdAt:"2025-12-02T00:00:00.000Z"
+      },
+      {
+        id:2016, name:"LA Kush Cake", type:"hybrid", potency:"גבוהה", price:430,
+        dosage:"0.2-0.5 גרם", thc:23.5, cbd:0.2, country:"קנדה", importer:"טוקן",
+        terpenes:"Limonene, Caryophyllene, Myrcene", effects:"חלק ועדין לעישון עם נחיתת גוף איטית.", rating:4,
+        pharmacies:["ניו-פארם"], notes:"Wedding Cake × Kush Mints.", createdAt:"2025-12-02T01:00:00.000Z"
+      },
+      {
+        id:2017, name:"Skywalker OG", type:"hybrid", potency:"גבוהה", price:420,
+        dosage:"0.1-0.3 גרם", thc:23, cbd:0.2, country:"קנדה", importer:"בי.או.אל",
+        terpenes:"Myrcene, Caryophyllene, Limonene", effects:"עוצמתי וקיצוני — להרגעה ולהקלת כאבים.", rating:4,
+        pharmacies:["טבע אנד סאן"], notes:"OG Kush × Mazar × Blueberry.", createdAt:"2025-12-02T02:00:00.000Z"
+      },
+      {
+        id:2018, name:"Master Kush", type:"indica", potency:"גבוהה", price:390,
+        dosage:"0.2-0.4 גרם", thc:20.5, cbd:0.3, country:"הולנד", importer:"IMC",
+        terpenes:"Myrcene, Caryophyllene, Limonene", effects:"הרגעת גוף עמוקה עם מוח צלול.", rating:4,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"שני קווי דם landrace מה-Hindu Kush.", createdAt:"2025-12-02T03:00:00.000Z"
+      },
+      {
+        id:2019, name:"Afghani", type:"indica", potency:"גבוהה", price:370,
+        dosage:"0.15-0.35 גרם", thc:19, cbd:0.3, country:"הולנד", importer:"סבן",
+        terpenes:"Terpinolene, Myrcene, Pinene", effects:"הרגעה כבדה; אחד הזנים העתיקים בעולם (landrace).", rating:4,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"Landrace ממוצא אפגני — ללא הורים ידועים.", createdAt:"2025-12-02T04:00:00.000Z"
+      },
+      {
+        id:2020, name:"Hindu Kush", type:"indica", potency:"בינונית", price:360,
+        dosage:"0.2-0.5 גרם", thc:18.5, cbd:0.2, country:"הולנד", importer:"טוקן",
+        terpenes:"Limonene, Myrcene, Pinene", effects:"רוגע עמוק עם ארומת סנדלווד מתוקה.", rating:4,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Landrace מהרי ההינדו-קוש — ללא הורים ידועים.", createdAt:"2025-12-02T05:00:00.000Z"
+      },
+      {
+        id:2021, name:"Bubba Kush", type:"indica", potency:"גבוהה", price:380,
+        dosage:"0.1-0.3 גרם", thc:20, cbd:0.1, country:"הולנד", importer:"בי.או.אל",
+        terpenes:"Caryophyllene, Myrcene, Limonene", effects:"מרגיע ומשאיר במקום — טעם חשיש מתוק.", rating:4,
+        pharmacies:["ניו-פארם"], notes:"OG Kush × (אפגני לא מזוהה) — נולד בניו אורלינס בשנות ה-90.", createdAt:"2025-12-02T06:00:00.000Z"
+      },
+      {
+        id:2022, name:"Blackberry Kush", type:"indica", potency:"בינונית", price:340,
+        dosage:"0.2-0.4 גרם", thc:17.5, cbd:0.4, country:"הולנד", importer:"IMC",
+        terpenes:"Caryophyllene, Myrcene, Pinene", effects:"טעם בלוברי מתוק עם הרגעת גוף מהירה.", rating:3,
+        pharmacies:["טבע אנד סאן"], notes:"Blackberry × Afghani.", createdAt:"2025-12-02T07:00:00.000Z"
+      },
+      {
+        id:2023, name:"King Louis XIII", type:"indica", potency:"גבוהה", price:400,
+        dosage:"0.15-0.35 גרם", thc:21, cbd:0.2, country:"הולנד", importer:"סבן",
+        terpenes:"Myrcene, Caryophyllene, Limonene", effects:"הרגעת שרירים מלכותית; OG עוצמתי.", rating:4,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"OG Kush × LA Confidential.", createdAt:"2025-12-02T08:00:00.000Z"
+      },
+      {
+        id:2024, name:"Tahoe OG", type:"hybrid", potency:"גבוהה", price:410,
+        dosage:"0.2-0.5 גרם", thc:22, cbd:0.1, country:"קנדה", importer:"טוקן",
+        terpenes:"Myrcene, Limonene, Caryophyllene", effects:"OG עם עוד מעט ‘חרדל’ — חזק יותר מהקרובים.", rating:4,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"OG Kush × SFV Kush (פנוטייפ).", createdAt:"2025-12-02T09:00:00.000Z"
+      },
+      {
+        id:2025, name:"The Original Z (Zkittlez)", type:"indica", potency:"בינונית", price:390,
+        dosage:"0.1-0.3 גרם", thc:19.5, cbd:0.1, country:"הולנד", importer:"בי.או.אל",
+        terpenes:"Caryophyllene, Myrcene, Limonene", effects:"פירות טרופיים מתוקים עם הרמה מפתיעה ופוקוס.", rating:5,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Grape Ape × Grapefruit — זן חדש-קלאסי.", createdAt:"2025-12-02T10:00:00.000Z"
+      },
+      {
+        id:2026, name:"Sundae Driver", type:"hybrid", potency:"בינונית", price:370,
+        dosage:"0.2-0.4 גרם", thc:18.5, cbd:0.2, country:"קנדה", importer:"IMC",
+        terpenes:"Limonene, Caryophyllene, Myrcene", effects:"טעם שמנת נעים עם גישה מנומסת של ‘בלי דאגות’.", rating:4,
+        pharmacies:["ניו-פארם"], notes:"FPOG × Grape Pie — גודל ע'י Jungle Boys.", createdAt:"2025-12-02T11:00:00.000Z"
+      },
+      {
+        id:2027, name:"Animal Cookies", type:"hybrid", potency:"גבוהה", price:430,
+        dosage:"0.15-0.35 גרם", thc:23, cbd:0.1, country:"קנדה", importer:"סבן",
+        terpenes:"Caryophyllene, Limonene, Humulene", effects:"מתוק-חמוץ עם ניצנים סגולים יפים.", rating:4,
+        pharmacies:["טבע אנד סאן"], notes:"GSC × Fire OG.", createdAt:"2025-12-02T12:00:00.000Z"
+      },
+      {
+        id:2028, name:"Key Lime Pie", type:"hybrid", potency:"בינונית", price:380,
+        dosage:"0.2-0.5 גרם", thc:19, cbd:0.2, country:"קנדה", importer:"טוקן",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"פרופיל קינוח ליים עם אפקט GSC מרוסן.", rating:3,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"פנוטייפ של GSC.", createdAt:"2025-12-02T13:00:00.000Z"
+      },
+      {
+        id:2029, name:"Grape Pie", type:"hybrid", potency:"בינונית", price:380,
+        dosage:"0.1-0.3 גרם", thc:18.5, cbd:0.3, country:"קנדה", importer:"בי.או.אל",
+        terpenes:"Caryophyllene, Myrcene, Limonene", effects:"סוכר וחמיצות ענבים ואופוריה.", rating:4,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"Cherry Pie × Grape Stomper.", createdAt:"2025-12-02T14:00:00.000Z"
+      },
+      {
+        id:2030, name:"Grape Stomper", type:"hybrid", potency:"בינונית", price:380,
+        dosage:"0.2-0.4 גרם", thc:19, cbd:0.3, country:"קנדה", importer:"IMC",
+        terpenes:"Myrcene, Caryophyllene, Pinene", effects:"אווירת כרם ענבים עם כוח סור דיזל.", rating:3,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Purple Elephant × Sour Chem.", createdAt:"2025-12-02T15:00:00.000Z"
+      },
+      {
+        id:2031, name:"Mimosa", type:"hybrid", potency:"בינונית", price:400,
+        dosage:"0.15-0.35 גרם", thc:20, cbd:0.3, country:"קנדה", importer:"סבן",
+        terpenes:"Myrcene, Limonene, Pinene", effects:"התחלת יום ראשון עם תחושת בראנש עדינה.", rating:5,
+        pharmacies:["ניו-פארם"], notes:"Clementine × Purple Punch — זוכה פרסים בינלאומי.", createdAt:"2025-12-02T16:00:00.000Z"
+      },
+      {
+        id:2032, name:"MAC (Miracle Alien Cookies)", type:"hybrid", potency:"גבוהה", price:440,
+        dosage:"0.2-0.5 גרם", thc:23, cbd:0.2, country:"קנדה", importer:"טוקן",
+        terpenes:"Limonene, Caryophyllene, Myrcene", effects:"חרוטים צפופים קפואים עם THC גבוה וריח עוגיות.", rating:5,
+        pharmacies:["טבע אנד סאן"], notes:"Alien Cookies × Starfighter (× Colombian).", createdAt:"2025-12-02T17:00:00.000Z"
+      },
+      {
+        id:2033, name:"Kush Mints", type:"hybrid", potency:"גבוהה", price:420,
+        dosage:"0.1-0.3 גרם", thc:22.5, cbd:0.2, country:"קנדה", importer:"בי.או.אל",
+        terpenes:"Limonene, Caryophyllene, Myrcene", effects:"מנטה עם Cookies — הרגעה מאושרת בניצנים כהים-קפואים.", rating:4,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"Animal Mints × Bubba Kush.", createdAt:"2025-12-02T18:00:00.000Z"
+      },
+      {
+        id:2034, name:"Strawberry Cough", type:"sativa", potency:"בינונית", price:380,
+        dosage:"0.2-0.4 גרם", thc:17.5, cbd:0.2, country:"קליפורניה", importer:"IMC",
+        terpenes:"Myrcene, Pinene, Caryophyllene", effects:"פירותיים מהשדה בטעם תות עם גל אנרגיה מוחית.", rating:4,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"Haze × Strawberry Fields.", createdAt:"2025-12-02T19:00:00.000Z"
+      },
+      {
+        id:2035, name:"Cheese", type:"hybrid", potency:"בינונית", price:360,
+        dosage:"0.15-0.35 גרם", thc:17, cbd:0.3, country:"קנדה", importer:"סבן",
+        terpenes:"Pinene, Caryophyllene, Myrcene", effects:"ריח גבינה אייקוני; עורר רעב והרגעה עדינה.", rating:4,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Skunk #1 (פנוטייפ UK).", createdAt:"2025-12-02T20:00:00.000Z"
+      },
+      {
+        id:2036, name:"Blueberry Muffins", type:"hybrid", potency:"בינונית", price:370,
+        dosage:"0.2-0.5 גרם", thc:18, cbd:0.3, country:"קנדה", importer:"טוקן",
+        terpenes:"Caryophyllene, Myrcene, Limonene", effects:"מתוק, חלק וקרמי — כמו מאפין טרי של בוקר שבת.", rating:3,
+        pharmacies:["ניו-פארם"], notes:"מבוסס על ה-Blueberry של DJ Short.", createdAt:"2025-12-02T21:00:00.000Z"
+      },
+      {
+        id:2037, name:"Stardawg", type:"hybrid", potency:"גבוהה", price:400,
+        dosage:"0.1-0.3 גרם", thc:21.5, cbd:0.2, country:"קנדה", importer:"בי.או.אל",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"פאנק דיזל כבד עם שכבת קריסטלים מנצנצת.", rating:4,
+        pharmacies:["טבע אנד סאן"], notes:"Chemdog #4 × Tres Dawg.", createdAt:"2025-12-02T22:00:00.000Z"
+      },
+      {
+        id:2038, name:"Orange Creamsicle", type:"hybrid", potency:"בינונית", price:350,
+        dosage:"0.2-0.4 גרם", thc:17, cbd:0.3, country:"קנדה", importer:"IMC",
+        terpenes:"Caryophyllene, Myrcene, Limonene", effects:"קרם תפוזים קלאסי — אפקט יומיומי עדין.", rating:3,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"Orange Crush × Juicy Fruit.", createdAt:"2025-12-02T23:00:00.000Z"
+      },
+      {
+        id:2039, name:"Rainbow Belts", type:"hybrid", potency:"בינונית", price:390,
+        dosage:"0.15-0.35 גרם", thc:19.5, cbd:0.2, country:"קנדה", importer:"סבן",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"צאצא של Zkittlez עם טעמים טרופיים והרגעה מאושרת.", rating:4,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"The Original Z × Moonbow.", createdAt:"2025-12-03T00:00:00.000Z"
+      },
+      {
+        id:2040, name:"GMO Cookies", type:"hybrid", potency:"גבוהה", price:440,
+        dosage:"0.2-0.5 גרם", thc:24, cbd:0.1, country:"קנדה", importer:"טוקן",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"פרופיל מלוח-שום-גבינה כחולה — מעולה לרוזין.", rating:5,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Chemdog × GSC — ידוע גם בשם Garlic Cookies.", createdAt:"2025-12-03T01:00:00.000Z"
+      },
+      {
+        id:2041, name:"Mendo Breath", type:"indica", potency:"גבוהה", price:420,
+        dosage:"0.1-0.3 גרם", thc:22.5, cbd:0.1, country:"הולנד", importer:"בי.או.אל",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"וניל-קרמל מפנק לסיום היום עם נחיתה קשה.", rating:4,
+        pharmacies:["ניו-פארם"], notes:"Mendo Montage × OGKB.", createdAt:"2025-12-03T02:00:00.000Z"
+      },
+      {
+        id:2042, name:"Hash Burger", type:"hybrid", potency:"גבוהה", price:430,
+        dosage:"0.2-0.4 גרם", thc:23, cbd:0.2, country:"קנדה", importer:"IMC",
+        terpenes:"Myrcene, Caryophyllene, Limonene", effects:"זן השנה 2025 ב-Leafly — פאנק חשיש רועש.", rating:4,
+        pharmacies:["טבע אנד סאן"], notes:"Han Solo Hash Plant × Double Burger.", createdAt:"2025-12-03T03:00:00.000Z"
+      },
+      {
+        id:2043, name:"9 Pound Hammer", type:"indica", potency:"גבוהה", price:400,
+        dosage:"0.15-0.35 גרם", thc:21, cbd:0.2, country:"הולנד", importer:"סבן",
+        terpenes:"Myrcene, Caryophyllene, Limonene", effects:"אגרוף של 9 פאונד — אנטוקסיקציה מתמשכת לשינה.", rating:4,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"Gooberry × Hell's OG × Jack the Ripper.", createdAt:"2025-12-03T04:00:00.000Z"
+      },
+      {
+        id:2044, name:"Papaya Punch", type:"hybrid", potency:"בינונית", price:390,
+        dosage:"0.2-0.5 גרם", thc:19, cbd:0.3, country:"קנדה", importer:"טוקן",
+        terpenes:"Limonene, Caryophyllene, Myrcene", effects:"פירות טרופיים עם נגיעה של גבינה; נהדר לסרט בערב.", rating:4,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"Papaya × Purple Punch.", createdAt:"2025-12-03T05:00:00.000Z"
+      },
+      {
+        id:2045, name:"God's Gift", type:"indica", potency:"גבוהה", price:410,
+        dosage:"0.1-0.3 גרם", thc:21.5, cbd:0.2, country:"הולנד", importer:"בי.או.אל",
+        terpenes:"Limonene, Myrcene, Caryophyllene", effects:"שניים מהזנים הגדולים בהיסטוריה בשילוב אחד מדהים.", rating:4,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Granddaddy Purple × OG Kush.", createdAt:"2025-12-03T06:00:00.000Z"
+      },
+      {
+        id:2046, name:"Pink Kush", type:"hybrid", potency:"גבוהה", price:400,
+        dosage:"0.2-0.4 גרם", thc:21, cbd:0.2, country:"קנדה", importer:"IMC",
+        terpenes:"Myrcene, Caryophyllene, Limonene", effects:"וניל-סוכריה מתוקה עם הרגעת גוף עוצמתית.", rating:4,
+        pharmacies:["ניו-פארם"], notes:"צאצא של OG Kush.", createdAt:"2025-12-03T07:00:00.000Z"
+      },
+      {
+        id:2047, name:"Pineapple Express", type:"hybrid", potency:"בינונית", price:380,
+        dosage:"0.15-0.35 גרם", thc:18.5, cbd:0.4, country:"קנדה", importer:"סבן",
+        terpenes:"Myrcene, Pinene, Caryophyllene", effects:"באז שמח ואנרגטי עם טעם אננס-מנגו טרופי.", rating:4,
+        pharmacies:["טבע אנד סאן"], notes:"Trainwreck × Hawaiian — ידוע גם מהסרט.", createdAt:"2025-12-03T08:00:00.000Z"
+      },
+      {
+        id:2048, name:"Trainwreck", type:"hybrid", potency:"גבוהה", price:400,
+        dosage:"0.2-0.5 גרם", thc:20.5, cbd:0.3, country:"קנדה", importer:"טוקן",
+        terpenes:"Terpinolene, Myrcene, Pinene", effects:"אנרגיה דוהרת עם לימון-אורן חריף; קלאסיקת צפון קליפורניה.", rating:4,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"Mexican × Thai × Afghani.", createdAt:"2025-12-03T09:00:00.000Z"
+      },
+      {
+        id:2049, name:"Forbidden Fruit", type:"indica", potency:"בינונית", price:390,
+        dosage:"0.1-0.3 גרם", thc:19.5, cbd:0.2, country:"הולנד", importer:"בי.או.אל",
+        terpenes:"Myrcene, Caryophyllene, Limonene", effects:"התחלה בין העיניים עם התמסחות הדרגתית וטעם טרופי.", rating:4,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"Tangie × Cherry Pie.", createdAt:"2025-12-03T10:00:00.000Z"
+      },
+      {
+        id:2050, name:"Durban Poison", type:"sativa", potency:"בינונית", price:360,
+        dosage:"0.2-0.4 גרם", thc:18, cbd:0.3, country:"קליפורניה", importer:"IMC",
+        terpenes:"Terpinolene, Pinene, Myrcene", effects:"סאטיבה טהורה מדרום אפריקה; דלק לפוקוס וליצירתיות.", rating:4,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Landrace מנמל דרבן — ללא הורים ידועים.", createdAt:"2025-12-03T11:00:00.000Z"
+      },
+      {
+        id:2051, name:"Green Crack", type:"sativa", potency:"בינונית", price:340,
+        dosage:"0.15-0.35 גרם", thc:17.5, cbd:0.4, country:"קליפורניה", importer:"סבן",
+        terpenes:"Myrcene, Pinene, Caryophyllene", effects:"באז מנטלי מרענן לכל היום; מנגו חריף.", rating:4,
+        pharmacies:["ניו-פארם"], notes:"Skunk #1 (פנוטייפ).", createdAt:"2025-12-03T12:00:00.000Z"
+      },
+      {
+        id:2052, name:"Maui Wowie", type:"sativa", potency:"בינונית", price:350,
+        dosage:"0.2-0.5 גרם", thc:16.5, cbd:0.4, country:"קליפורניה", importer:"טוקן",
+        terpenes:"Myrcene, Pinene, Caryophyllene", effects:"טרופי מהוואי עם אופוריה גבוהה-אנרגטית.", rating:4,
+        pharmacies:["טבע אנד סאן"], notes:"Landrace מוואי — ללא הורים ידועים.", createdAt:"2025-12-03T13:00:00.000Z"
+      },
+      {
+        id:2053, name:"Acapulco Gold", type:"sativa", potency:"בינונית", price:370,
+        dosage:"0.1-0.3 גרם", thc:18.5, cbd:0.5, country:"קליפורניה", importer:"בי.או.אל",
+        terpenes:"Caryophyllene, Myrcene, Pinene", effects:"קלאסיקה מקסיקנית עם באז ממריץ וארומת טופי שרוף.", rating:4,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"Landrace מקסיקני — ללא הורים ידועים.", createdAt:"2025-12-03T14:00:00.000Z"
+      },
+      {
+        id:2054, name:"Super Lemon Haze", type:"sativa", potency:"גבוהה", price:400,
+        dosage:"0.2-0.4 גרם", thc:20, cbd:0.3, country:"קליפורניה", importer:"IMC",
+        terpenes:"Terpinolene, Limonene, Pinene", effects:"זסט צהוב-לימוני עם אנרגיה חיה ומוחית.", rating:5,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"Lemon Skunk × Super Silver Haze.", createdAt:"2025-12-03T15:00:00.000Z"
+      },
+      {
+        id:2055, name:"Super Silver Haze", type:"sativa", potency:"גבוהה", price:400,
+        dosage:"0.15-0.35 גרם", thc:19.5, cbd:0.2, country:"קליפורניה", importer:"סבן",
+        terpenes:"Myrcene, Terpinolene, Caryophyllene", effects:"סאטיבה מרובת-פרסים של הולנד; ראש שמח לאורך זמן.", rating:4,
+        pharmacies:["סופר-פארם","טבע אנד סאן"], notes:"Skunk × Northern Lights × Haze.", createdAt:"2025-12-03T16:00:00.000Z"
+      },
+      {
+        id:2056, name:"Tropicana Cookies", type:"sativa", potency:"גבוהה", price:420,
+        dosage:"0.2-0.5 גרם", thc:21, cbd:0.2, country:"קליפורניה", importer:"טוקן",
+        terpenes:"Caryophyllene, Limonene, Myrcene", effects:"עוגיות מתוקות עם תפוז חריף ואנרגיה ממוקדת.", rating:5,
+        pharmacies:["ניו-פארם"], notes:"GSC × Tangie — ניצנים סגולים-כתומים.", createdAt:"2025-12-03T17:00:00.000Z"
+      },
+      {
+        id:2057, name:"Bruce Banner", type:"hybrid", potency:"גבוהה", price:460,
+        dosage:"0.1-0.3 גרם", thc:24.5, cbd:0.1, country:"קנדה", importer:"בי.או.אל",
+        terpenes:"Caryophyllene, Myrcene, Limonene", effects:"עוצמתי מאוד עם באז יצירתי ואופורי לחובבים מנוסים.", rating:5,
+        pharmacies:["טבע אנד סאן"], notes:"Strawberry Diesel × OG Kush.", createdAt:"2025-12-03T18:00:00.000Z"
+      },
+      {
+        id:2058, name:"Jack Herer", type:"sativa", potency:"גבוהה", price:410,
+        dosage:"0.2-0.4 גרם", thc:20, cbd:0.3, country:"קליפורניה", importer:"IMC",
+        terpenes:"Terpinolene, Pinene, Caryophyllene", effects:"הרמה מוחית בהירה ויצירתית; מחווה לפעיל הקנאביס האגדי.", rating:5,
+        pharmacies:["סופר-פארם","ניו-פארם","טבע אנד סאן"], notes:"Haze × Northern Lights #5 × Shiva Skunk.", createdAt:"2025-12-03T19:00:00.000Z"
+      },
+      {
+        id:2059, name:"Tangie", type:"sativa", potency:"בינונית", price:390,
+        dosage:"0.15-0.35 גרם", thc:19, cbd:0.3, country:"קליפורניה", importer:"סבן",
+        terpenes:"Myrcene, Limonene, Pinene", effects:"מנדרינה מתוקה עם אופוריה מרובה ושביעות רצון.", rating:4,
+        pharmacies:["ניו-פארם","סופר-פארם"], notes:"California Orange × Skunk #1.", createdAt:"2025-12-03T20:00:00.000Z"
       }
     ];
 
@@ -1242,42 +1649,93 @@
         return;
       }
 
-      const rows = strains.map((s, i) => {
-        const typeKey = ['indica','sativa','hybrid'].includes((s.type || '').toLowerCase()) ? s.type.toLowerCase() : 'hybrid';
-        const typeHeb = getTypeHebrew(s.type);
-        return `
-          <tr>
-            <td><a class="strain-name-link" href="#/strain/${encodeURIComponent(s.id)}" title="פתח את העמוד המלא של הזן">${escapeHtml(s.name || '-')}</a></td>
-            <td><span class="strain-type type-${typeKey}">${escapeHtml(typeHeb)}</span></td>
-            <td>${s.thc != null && s.thc !== '' ? escapeHtml(s.thc) + '%' : '-'}</td>
-            <td>${s.cbd != null && s.cbd !== '' ? escapeHtml(s.cbd) + '%' : '-'}</td>
-            <td>${s.price ? '₪' + escapeHtml(s.price) : '-'}</td>
-            <td>${s.rating ? '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating)))) : '-'}</td>
-            <td class="row-actions">
-              <button class="btn btn-small btn-page" onclick="viewStrain(${i})" title="לעמוד המלא של הזן">📄 עמוד מלא</button>
-              <button class="btn btn-small" onclick="editStrain(${i})" aria-label="ערוך">✏️</button>
-              <button class="btn btn-small btn-danger" onclick="deleteStrain(${i})" aria-label="מחק">🗑️</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      container.innerHTML = `
-        <table aria-describedby="strainsList">
-          <thead>
-            <tr>
-              <th scope="col">שם</th>
-              <th scope="col">סוג</th>
-              <th scope="col">THC</th>
-              <th scope="col">CBD</th>
-              <th scope="col">מחיר</th>
-              <th scope="col">דירוג</th>
-              <th scope="col">פעולות</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+      const typeKeyOf = (s) => ['indica','sativa','hybrid'].includes((s.type || '').toLowerCase()) ? s.type.toLowerCase() : 'hybrid';
+      const viewToggle = `
+        <div class="view-toggle" role="group" aria-label="בחירת מצב תצוגה">
+          <button id="viewBtnTable" class="view-btn ${catalogViewMode === 'table' ? 'active' : ''}" onclick="setCatalogView('table')" aria-pressed="${catalogViewMode === 'table'}" title="תצוגת טבלה">📋 טבלה</button>
+          <button id="viewBtnCards" class="view-btn ${catalogViewMode === 'cards' ? 'active' : ''}" onclick="setCatalogView('cards')" aria-pressed="${catalogViewMode === 'cards'}" title="תצוגת כרטיסים">🎴 כרטיסים</button>
+        </div>
       `;
+
+      if(catalogViewMode === 'cards'){
+        const cards = strains.map((s, i) => {
+          const typeKey = typeKeyOf(s);
+          const stars = s.rating ? '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating)))) : '☆☆☆☆☆';
+          const terpChips = (s.terpenes || '').split(',').map(t => t.trim()).filter(Boolean).slice(0, 3)
+            .map(t => `<span class="card-terp">${escapeHtml(t)}</span>`).join('');
+          const pharmCount = Array.isArray(s.pharmacies) ? s.pharmacies.filter(p => p && String(p).trim()).length : 0;
+          return `
+            <article class="strain-card-sfc card-sfc-${typeKey}" onclick="viewStrain(${i})" role="button" tabindex="0" aria-label="פתח את עמוד הזן ${escapeHtml(s.name)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();viewStrain(${i});}">
+              <div class="sfc-head">
+                <span class="strain-type type-${typeKey}">${escapeHtml(getTypeHebrew(s.type))}</span>
+                <span class="sfc-rating" title="דירוג">${stars}</span>
+              </div>
+              <h3 class="sfc-name"><a class="strain-name-link" href="#/strain/${encodeURIComponent(s.id)}">${escapeHtml(s.name || '-')}</a></h3>
+              <div class="sfc-meters">
+                <div class="sfc-meter"><span class="sfc-meter-label">THC</span><div class="sfc-bar"><i style="width:${Math.max(0, Math.min(100, Number(s.thc) || 0))}%"></i></div><span class="sfc-meter-val">${Number(s.thc) || 0}%</span></div>
+                <div class="sfc-meter"><span class="sfc-meter-label">CBD</span><div class="sfc-bar sfc-bar-cbd"><i style="width:${Math.max(0, Math.min(100, Number(s.cbd) || 0))}%"></i></div><span class="sfc-meter-val">${Number(s.cbd) || 0}%</span></div>
+              </div>
+              ${s.effects ? `<p class="sfc-effects">${escapeHtml(s.effects)}</p>` : ''}
+              ${terpChips ? `<div class="sfc-terps">${terpChips}</div>` : ''}
+              <div class="sfc-meta">
+                ${s.potency ? `<span class="sfc-pill" title="עוצמה">💪 ${escapeHtml(s.potency)}</span>` : ''}
+                ${s.price ? `<span class="sfc-pill" title="מחיר">💰 ₪${escapeHtml(s.price)}</span>` : ''}
+                ${s.country ? `<span class="sfc-pill" title="מדינת גידול">🌍 ${escapeHtml(s.country)}</span>` : ''}
+                ${s.dosage ? `<span class="sfc-pill" title="מינון">💊 ${escapeHtml(s.dosage)}</span>` : ''}
+                ${pharmCount ? `<span class="sfc-pill" title="בתי מרקחת">🏥 ${pharmCount}</span>` : ''}
+              </div>
+              <div class="sfc-actions" onclick="event.stopPropagation();">
+                <button class="btn btn-small btn-page" onclick="viewStrain(${i})" title="לעמוד המלא של הזן">📄 עמוד מלא</button>
+                <button class="btn btn-small" onclick="editStrain(${i})" aria-label="ערוך ${escapeHtml(s.name)}">✏️</button>
+                <button class="btn btn-small btn-danger" onclick="deleteStrain(${i})" aria-label="מחק ${escapeHtml(s.name)}">🗑️</button>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        container.innerHTML = `
+          \${viewToggle}
+          <div class="cards-grid">\${cards}</div>
+        `;
+      } else {
+        const rows = strains.map((s, i) => {
+          const typeKey = typeKeyOf(s);
+          const typeHeb = getTypeHebrew(s.type);
+          return `
+            <tr>
+              <td><a class="strain-name-link" href="#/strain/${encodeURIComponent(s.id)}" title="פתח את העמוד המלא של הזן">${escapeHtml(s.name || '-')}</a></td>
+              <td><span class="strain-type type-${typeKey}">${escapeHtml(typeHeb)}</span></td>
+              <td>${s.thc != null && s.thc !== '' ? escapeHtml(s.thc) + '%' : '-'}</td>
+              <td>${s.cbd != null && s.cbd !== '' ? escapeHtml(s.cbd) + '%' : '-'}</td>
+              <td>${s.price ? '₪' + escapeHtml(s.price) : '-'}</td>
+              <td>${s.rating ? '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating)))) : '-'}</td>
+              <td class="row-actions">
+                <button class="btn btn-small btn-page" onclick="viewStrain(${i})" title="לעמוד המלא של הזן">📄 עמוד מלא</button>
+                <button class="btn btn-small" onclick="editStrain(${i})" aria-label="ערוך">✏️</button>
+                <button class="btn btn-small btn-danger" onclick="deleteStrain(${i})" aria-label="מחק">🗑️</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        container.innerHTML = `
+          \${viewToggle}
+          <table aria-describedby="strainsList">
+            <thead>
+              <tr>
+                <th scope="col">שם</th>
+                <th scope="col">סוג</th>
+                <th scope="col">THC</th>
+                <th scope="col">CBD</th>
+                <th scope="col">מחיר</th>
+                <th scope="col">דירוג</th>
+                <th scope="col">פעולות</th>
+              </tr>
+            </thead>
+            <tbody>\${rows}</tbody>
+          </table>
+        `;
+      }
 
       // Keep an open strain page in sync when data changes (cloud listener / edits)
       if(detailStrainId !== null){
@@ -1287,7 +1745,6 @@
         handleStrainRoute();
       }
     }
-
     function escapeHtml(str){
       if(str === null || str === undefined) return '';
       return String(str)
@@ -1296,6 +1753,15 @@
         .replace(/>/g,'&gt;')
         .replace(/"/g,'&quot;')
         .replace(/'/g,'&#039;');
+    }
+
+    /* ========== CATALOG VIEW MODE (table / visual cards) ========== */
+    let catalogViewMode = 'table';
+    try { if (localStorage.getItem('canabisViewMode') === 'cards') catalogViewMode = 'cards'; } catch(e){}
+    function setCatalogView(mode){
+      catalogViewMode = (mode === 'cards') ? 'cards' : 'table';
+      try{ localStorage.setItem('canabisViewMode', catalogViewMode); }catch(e){}
+      renderStrains();
     }
 
     function getTypeHebrew(type){
@@ -1425,6 +1891,16 @@
     }
     window.addEventListener('hashchange', handleStrainRoute);
 
+    // Keyboard navigation while a strain page is open (RTL heuristic: ArrowRight = next, ArrowLeft = prev)
+    document.addEventListener('keydown', (ev) => {
+      if(detailStrainId === null) return;
+      const tag = (ev.target && ev.target.tagName) || '';
+      if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if(ev.key === 'ArrowRight'){ ev.preventDefault(); gotoNextStrain(); }
+      else if(ev.key === 'ArrowLeft'){ ev.preventDefault(); gotoPrevStrain(); }
+      else if(ev.key === 'Escape'){ ev.preventDefault(); closeStrainPage(); }
+    });
+
     function openStrainPage(id){
       const s = findStrainById(id);
       if(!s){
@@ -1476,6 +1952,18 @@
       const content = document.getElementById('strainDetailContent');
       if(!content) return;
       const idx = strains.findIndex(x => String(x.id) === String(s.id));
+      const prevStrain = (idx > 0) ? strains[idx - 1] : null;
+      const nextStrain = (idx >= 0 && idx < strains.length - 1) ? strains[idx + 1] : null;
+      const navButtons = (prevStrain || nextStrain) ? `
+        <div class="strain-page-nav" role="navigation" aria-label="ניווט בין זנים">
+          ${prevStrain
+            ? `<button class="btn btn-secondary strain-nav-btn" onclick="gotoPrevStrain()" title="חץ שמאלה במקלדת">👉 הזן הקודם: ${escapeHtml(prevStrain.name)}</button>`
+            : '<span class="strain-nav-btn strain-nav-disabled">תחילת הקטלוג</span>'}
+          <span class="strain-nav-pos">${idx + 1} / ${strains.length}</span>
+          ${nextStrain
+            ? `<button class="btn btn-primary strain-nav-btn" onclick="gotoNextStrain()" title="חץ ימינה במקלדת">הזן הבא: ${escapeHtml(nextStrain.name)} 👈</button>`
+            : '<span class="strain-nav-btn strain-nav-disabled">סוף הקטלוג</span>'}
+        </div>` : '';
       const typeKey = ['indica','sativa','hybrid'].includes((s.type || '').toLowerCase()) ? s.type.toLowerCase() : 'hybrid';
       const stars = s.rating ? '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating) || 0))) : '';
       const terpenes = (s.terpenes || '').split(',').map(t => t.trim()).filter(Boolean);
@@ -1492,6 +1980,7 @@
             <button class="btn btn-small btn-danger" onclick="deleteStrain(${idx})">🗑️ מחיקה</button>
           </div>
         </div>
+        ${navButtons}
 
         <section class="sp-hero">
           <div class="sp-hero-head">
@@ -1568,6 +2057,31 @@
       `).join('');
     }
     function removePharmacy(i){ currentPharmacies.splice(i,1); renderPharmacies(); }
+
+    /* ========== PREV/NEXT STRAIN NAVIGATION (detail page) ========== */
+    function gotoDetailIndex(idx){
+      if(idx === null || idx < 0 || idx >= strains.length) return;
+      const target = strains[idx];
+      if(!target) return;
+      if(location.hash === '#/strain/' + encodeURIComponent(target.id)){
+        openStrainPage(target.id); // same hash — re-render manually
+      } else {
+        location.hash = '#/strain/' + encodeURIComponent(target.id);
+      }
+      if(target.name) showNotification('🌿 ' + target.name, 1200);
+    }
+    function gotoPrevStrain(){
+      if(detailStrainId === null) return;
+      const idx = strains.findIndex(x => String(x.id) === String(detailStrainId));
+      if(idx <= 0){ showNotification('⚠️ זהו הזן הראשון בקטלוג'); return; }
+      gotoDetailIndex(idx - 1);
+    }
+    function gotoNextStrain(){
+      if(detailStrainId === null) return;
+      const idx = strains.findIndex(x => String(x.id) === String(detailStrainId));
+      if(idx < 0 || idx >= strains.length - 1){ showNotification('⚠️ זהו הזן האחרון בקטלוג'); return; }
+      gotoDetailIndex(idx + 1);
+    }
 
     /* ========== SEARCH ========== */
     function performSearch(){
