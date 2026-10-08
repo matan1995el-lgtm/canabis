@@ -478,6 +478,57 @@
       .settings-grid{ grid-template-columns:1fr; }
       .subtitle{ margin-bottom:18px; }
     }
+    /* ---------- STRAIN DETAIL PAGE (2026-10-08): full page per strain ---------- */
+    td.row-actions{ white-space:nowrap; }
+    .strain-page{ position:fixed; inset:0; z-index:9000; background:var(--bg-main); overflow-y:auto; display:none; }
+    .strain-page.active{ display:block; }
+    .strain-page-inner{ max-width:980px; margin:0 auto; padding:22px 18px 64px; }
+    .strain-page-topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+    .strain-page-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .sp-hero{
+      background:linear-gradient(135deg, rgba(102,187,106,0.14), rgba(66,165,245,0.07)), var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:var(--card-radius);
+      padding:26px;
+      box-shadow:0 18px 40px -24px var(--shadow);
+    }
+    .sp-hero-head{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .sp-name{ font-size:clamp(1.6rem, 4vw, 2.3rem); font-weight:800; margin:0; letter-spacing:-0.02em; }
+    .sp-meta{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    .sp-chip{ background:var(--glass); border:1px solid var(--border); border-radius:999px; padding:5px 12px; font-size:0.88rem; font-weight:600; color:var(--text-secondary); }
+    .sp-chip.sp-dim{ opacity:0.7; font-weight:400; }
+    .sp-metrics{ display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:12px; margin-top:18px; }
+    .sp-metric{ background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center; box-shadow:0 8px 20px -16px var(--shadow); }
+    .sp-metric b{ display:block; font-size:1.45rem; font-weight:800; color:var(--primary); letter-spacing:-0.02em; }
+    .sp-metric span{ display:block; margin-top:4px; font-size:0.82rem; color:var(--muted); font-weight:600; }
+    .sp-section{
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:var(--card-radius);
+      padding:18px 20px;
+      margin-top:14px;
+      box-shadow:0 12px 30px -26px var(--shadow);
+    }
+    .sp-section h3{ margin:0 0 10px; color:var(--primary); font-size:1.05rem; }
+    .sp-text{ margin:0; line-height:1.7; white-space:pre-wrap; color:var(--text-main); }
+    .sp-kv{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px 22px; }
+    .sp-kv > div{ display:flex; flex-direction:column; gap:2px; }
+    .sp-k{ font-size:0.82rem; font-weight:700; color:var(--muted); }
+    .sp-v{ font-size:1rem; font-weight:600; color:var(--text-main); }
+    .sp-tags{ display:flex; flex-wrap:wrap; gap:8px; }
+    .sp-tag{ background:var(--bg-accent); border:1px solid var(--border); color:var(--text-main); border-radius:999px; padding:5px 13px; font-size:0.88rem; font-weight:600; }
+    .sp-empty{ color:var(--muted); font-style:italic; }
+    .sp-footer{ margin-top:20px; text-align:center; color:var(--muted); font-size:0.85rem; }
+    .strain-name-link{ color:var(--text-main); font-weight:700; text-decoration:none; border-bottom:1px dashed var(--border); cursor:pointer; transition:color .15s ease, border-color .15s ease; }
+    .strain-name-link:hover{ color:var(--primary); border-bottom-color:var(--primary); }
+    .btn-page{ background:var(--bg-accent); color:var(--primary); border:1px solid var(--border); font-weight:700; }
+    .btn-page:hover{ border-color:var(--primary); transform:translateY(-2px); }
+    @media (max-width: 768px) {
+      .strain-page-inner{ padding:14px 10px 56px; }
+      .sp-hero{ padding:18px; }
+      .sp-metrics{ grid-template-columns:repeat(2, 1fr); }
+      .strain-page-topbar .btn{ padding:10px 12px; font-size:0.85rem; }
+    }
   </style>
 </head>
 <body>
@@ -584,6 +635,11 @@
         </section>
       </div>
     </div>
+  </div>
+
+  <!-- STRAIN DETAIL PAGE (one full page per strain, hash-routed) -->
+  <div id="strainDetailPage" class="strain-page" role="region" aria-label="עמוד פרטי זן" aria-hidden="true">
+    <div class="strain-page-inner" id="strainDetailContent"></div>
   </div>
 
   <!-- ADD STRAIN MODAL -->
@@ -1191,15 +1247,15 @@
         const typeHeb = getTypeHebrew(s.type);
         return `
           <tr>
-            <td><strong>${escapeHtml(s.name || '-')}</strong></td>
+            <td><a class="strain-name-link" href="#/strain/${encodeURIComponent(s.id)}" title="פתח את העמוד המלא של הזן">${escapeHtml(s.name || '-')}</a></td>
             <td><span class="strain-type type-${typeKey}">${escapeHtml(typeHeb)}</span></td>
             <td>${s.thc != null && s.thc !== '' ? escapeHtml(s.thc) + '%' : '-'}</td>
             <td>${s.cbd != null && s.cbd !== '' ? escapeHtml(s.cbd) + '%' : '-'}</td>
             <td>${s.price ? '₪' + escapeHtml(s.price) : '-'}</td>
             <td>${s.rating ? '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating)))) : '-'}</td>
-            <td>
+            <td class="row-actions">
+              <button class="btn btn-small btn-page" onclick="viewStrain(${i})" title="לעמוד המלא של הזן">📄 עמוד מלא</button>
               <button class="btn btn-small" onclick="editStrain(${i})" aria-label="ערוך">✏️</button>
-              <button class="btn btn-small" onclick="viewStrain(${i})" aria-label="צפה">👁️</button>
               <button class="btn btn-small btn-danger" onclick="deleteStrain(${i})" aria-label="מחק">🗑️</button>
             </td>
           </tr>
@@ -1222,6 +1278,14 @@
           <tbody>${rows}</tbody>
         </table>
       `;
+
+      // Keep an open strain page in sync when data changes (cloud listener / edits)
+      if(detailStrainId !== null){
+        const ds = findStrainById(detailStrainId);
+        if(ds) renderStrainPage(ds);
+      } else if(pendingDetailId !== null && findStrainById(pendingDetailId)){
+        handleStrainRoute();
+      }
     }
 
     function escapeHtml(str){
@@ -1317,38 +1381,173 @@
       if(index < 0 || index >= strains.length) return;
       if(confirm(`למחוק את הזן "${strains[index].name}"?`)){
         expectCloudShrink = true; // intentional removal — skip the anti-overwrite guard
+        const removedId = strains[index].id;
         const removed = strains.splice(index,1);
         saveData();
         renderStrains();
+        // If the deleted strain's own page is open, close it
+        if(String(detailStrainId) === String(removedId)) hideStrainPage();
         showNotification(`🗑️ הזן הוסר: ${removed[0].name}`);
       }
     }
 
+    /* ========== STRAIN DETAIL PAGE (2026-10-08): hash-routed full page per strain ========== */
+    let detailStrainId = null;   // id of the strain whose page is currently open (null = closed)
+    let pendingDetailId = null;  // deep link received before data finished loading — retried in renderStrains
+
+    function findStrainById(id){
+      return strains.find(s => String(s.id) === String(id)) || null;
+    }
+
+    // Entry point from table/search buttons: navigate to the strain's own page
     function viewStrain(index){
       if(index < 0 || index >= strains.length) return;
-      const s = strains[index];
-      const details = [
-        `📌 ${s.name}`,
-        `━━━━━━━━━━━━━━━━━━━━━━`,
-        `🔹 סוג: ${getTypeHebrew(s.type)}`,
-        `🔹 עוצמה: ${s.potency || '-'}`,
-        `🔹 THC: ${s.thc}%`,
-        `🔹 CBD: ${s.cbd}%`,
-        `🔹 מחיר: ${s.price ? '₪' + s.price : '-'}`,
-        `🔹 מינון: ${s.dosage || '-'}`,
-        `🔹 מדינה: ${s.country || '-'}`,
-        `🔹 יבואן: ${s.importer || '-'}`,
-        `🔹 טרפנים: ${s.terpenes || '-'}`,
-        `🔹 דירוג: ${s.rating ? '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating) || 0))) : '-'}`,
-        `🔹 בתי מרקחת: ${(s.pharmacies && s.pharmacies.length) ? s.pharmacies.join(', ') : '-'}`,
-        ``,
-        `💊 השפעות:`,
-        `${s.effects || '-'}`,
-        ``,
-        `📝 הערות:`,
-        `${s.notes || '-'}`
-      ].join('\n');
-      alert(details);
+      location.hash = '#/strain/' + encodeURIComponent(strains[index].id);
+    }
+
+    // Hash router: #/strain/{id} opens the full strain page; any other hash closes it
+    function handleStrainRoute(){
+      const m = (location.hash || '').match(/^#\/strain\/(.+)$/);
+      if(m){
+        const id = decodeURIComponent(m[1]);
+        if(findStrainById(id)){
+          pendingDetailId = null;
+          openStrainPage(id);
+        } else {
+          // Data may still be loading (deep link) — retry when renderStrains runs
+          pendingDetailId = id;
+          hideStrainPage();
+        }
+      } else {
+        pendingDetailId = null;
+        hideStrainPage();
+      }
+    }
+    window.addEventListener('hashchange', handleStrainRoute);
+
+    function openStrainPage(id){
+      const s = findStrainById(id);
+      if(!s){
+        showNotification('⚠️ הזן המבוקש לא נמצא');
+        hideStrainPage();
+        return;
+      }
+      detailStrainId = s.id;
+      renderStrainPage(s);
+      const page = document.getElementById('strainDetailPage');
+      page.classList.add('active');
+      page.setAttribute('aria-hidden','false');
+      document.body.style.overflow = 'hidden';
+      page.scrollTop = 0;
+    }
+
+    function hideStrainPage(){
+      detailStrainId = null;
+      const page = document.getElementById('strainDetailPage');
+      if(!page) return;
+      page.classList.remove('active');
+      page.setAttribute('aria-hidden','true');
+      document.body.style.overflow = '';
+    }
+
+    function closeStrainPage(){
+      // Drop the hash without leaving a bare '#'
+      if(location.hash){
+        history.pushState(null, '', location.pathname + location.search);
+      }
+      hideStrainPage();
+    }
+
+    function copyStrainLink(){
+      navigator.clipboard.writeText(window.location.href)
+        .then(()=> showNotification('✅ הקישור לעמוד הזן הועתק!'))
+        .catch(()=> showNotification('❌ לא ניתן להעתיק את הקישור'));
+    }
+
+    function shareStrainWhatsApp(){
+      const s = findStrainById(detailStrainId);
+      if(!s) return;
+      const text = encodeURIComponent('🌿 ' + (s.name || '') + ' (' + getTypeHebrew(s.type) + ')\n' +
+        'THC: ' + (Number(s.thc) || 0) + '% | CBD: ' + (Number(s.cbd) || 0) + '%' + (s.effects ? '\n' + s.effects : ''));
+      window.open('https://wa.me/?text=' + text, '_blank');
+    }
+
+    function renderStrainPage(s){
+      const content = document.getElementById('strainDetailContent');
+      if(!content) return;
+      const idx = strains.findIndex(x => String(x.id) === String(s.id));
+      const typeKey = ['indica','sativa','hybrid'].includes((s.type || '').toLowerCase()) ? s.type.toLowerCase() : 'hybrid';
+      const stars = s.rating ? '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating) || 0))) : '';
+      const terpenes = (s.terpenes || '').split(',').map(t => t.trim()).filter(Boolean);
+      const pharmacies = Array.isArray(s.pharmacies) ? s.pharmacies.filter(p => typeof p === 'string' && p.trim()) : [];
+      const fmtDate = (iso) => { try { return iso ? new Date(iso).toLocaleString('he-IL') : '-'; } catch(e){ return iso || '-'; } };
+
+      content.innerHTML = `
+        <div class="strain-page-topbar">
+          <button class="btn btn-secondary" onclick="closeStrainPage()">← חזרה לקטלוג</button>
+          <div class="strain-page-actions">
+            <button class="btn btn-small" onclick="copyStrainLink()" title="העתקת קישור לעמוד זה">📋 קישור</button>
+            <button class="btn btn-small" onclick="shareStrainWhatsApp()" title="שיתוף הזן ב-WhatsApp">📱 שתף</button>
+            <button class="btn btn-small" onclick="editStrain(${idx})">✏️ עריכה</button>
+            <button class="btn btn-small btn-danger" onclick="deleteStrain(${idx})">🗑️ מחיקה</button>
+          </div>
+        </div>
+
+        <section class="sp-hero">
+          <div class="sp-hero-head">
+            <h2 class="sp-name">${escapeHtml(s.name || '-')}</h2>
+            <span class="strain-type type-${typeKey}">${escapeHtml(getTypeHebrew(s.type))}</span>
+          </div>
+          <div class="sp-meta">
+            ${s.potency ? '<span class="sp-chip">💪 עוצמה: ' + escapeHtml(s.potency) + '</span>' : ''}
+            ${stars ? '<span class="sp-chip">' + stars + '</span>' : '<span class="sp-chip sp-dim">אין דירוג</span>'}
+          </div>
+          <div class="sp-metrics">
+            <div class="sp-metric"><b>${Number(s.thc) || 0}%</b><span>THC</span></div>
+            <div class="sp-metric"><b>${Number(s.cbd) || 0}%</b><span>CBD</span></div>
+            <div class="sp-metric"><b>${s.price ? '₪' + escapeHtml(s.price) : '—'}</b><span>מחיר</span></div>
+            <div class="sp-metric"><b>${s.dosage ? escapeHtml(s.dosage) : '—'}</b><span>מינון מומלץ</span></div>
+          </div>
+        </section>
+
+        <section class="sp-section">
+          <h3>💊 השפעה ושימוש רפואי</h3>
+          ${s.effects
+            ? '<p class="sp-text">' + escapeHtml(s.effects) + '</p>'
+            : '<p class="sp-text sp-empty">לא תועדה השפעה עבור זן זה — ניתן להוסיף דרך עריכה</p>'}
+        </section>
+
+        <section class="sp-section">
+          <h3>🌾 פרטי גידול ויבוא</h3>
+          <div class="sp-kv">
+            <div><span class="sp-k">מדינת גידול</span><span class="sp-v">${s.country ? escapeHtml(s.country) : '—'}</span></div>
+            <div><span class="sp-k">חברת יבוא</span><span class="sp-v">${s.importer ? escapeHtml(s.importer) : '—'}</span></div>
+          </div>
+        </section>
+
+        <section class="sp-section">
+          <h3>🧬 טרפנים עיקריים</h3>
+          ${terpenes.length
+            ? '<div class="sp-tags">' + terpenes.map(t => '<span class="sp-tag">' + escapeHtml(t) + '</span>').join('') + '</div>'
+            : '<span class="sp-empty">לא תועדו טרפנים</span>'}
+        </section>
+
+        <section class="sp-section">
+          <h3>🏥 בתי מרקחת זמינים</h3>
+          ${pharmacies.length
+            ? '<div class="sp-tags">' + pharmacies.map(p => '<span class="sp-tag">💊 ' + escapeHtml(p) + '</span>').join('') + '</div>'
+            : '<span class="sp-empty">לא סומנו בתי מרקחת עבור זן זה</span>'}
+        </section>
+
+        <section class="sp-section">
+          <h3>📝 הערות</h3>
+          ${s.notes
+            ? '<p class="sp-text">' + escapeHtml(s.notes) + '</p>'
+            : '<p class="sp-text sp-empty">אין הערות</p>'}
+        </section>
+
+        <p class="sp-footer">🗓️ נוצר: ${escapeHtml(fmtDate(s.createdAt))}${s.updatedAt ? ' · עודכן: ' + escapeHtml(fmtDate(s.updatedAt)) : ''}</p>
+      `;
     }
 
     /* ========== PHARMACIES UI ========== */
@@ -1387,7 +1586,7 @@
         <h3>נמצאו ${results.length} תוצאות:</h3>
         ${results.map(s=>`
           <div style="background:var(--bg-accent); padding:12px; border-radius:10px; margin:8px 0;">
-            <h4 style="color:var(--primary); margin:0 0 6px 0;">${escapeHtml(s.name)}</h4>
+            <h4 style="color:var(--primary); margin:0 0 6px 0;"><a class="strain-name-link" href="#/strain/${encodeURIComponent(s.id)}">${escapeHtml(s.name)}</a></h4>
             <p style="margin:0;">${escapeHtml(getTypeHebrew(s.type))} • THC: ${Number(s.thc) || 0}% • CBD: ${Number(s.cbd) || 0}% ${s.rating ? '• ' + '⭐'.repeat(Math.max(0, Math.min(5, Number(s.rating) || 0))) : ''}</p>
             ${s.effects ? `<p style="margin-top:8px; color:var(--text-secondary);">${escapeHtml(s.effects)}</p>` : ''}
           </div>
@@ -1586,6 +1785,9 @@
       // Sync the dark-mode checkbox with the applied state (TASK-010)
       const darkCheckbox = document.getElementById('toggleDark');
       if(darkCheckbox) darkCheckbox.checked = document.documentElement.classList.contains('dark');
+
+      // Deep link: open the strain page if the URL carries #/strain/{id}
+      handleStrainRoute();
 
       // Also check when coming back to the page
       window.addEventListener('focus', () => checkForImportedData());

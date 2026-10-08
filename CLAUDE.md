@@ -26,12 +26,12 @@
 | 620–700 | state גלובלי, SAMPLE_DATA, firebaseConfig |
 | 700–905 | Firebase init + auth אנונימי + מיגרציה + listener + ולידציית ענן + saveData/loadData |
 | 906–1010 | יבוא/ייצוא |
-| 1010–1180 | רינדור טבלה, CRUD (כולל עריכת זן), pharmacies |
+| 1010–1180 | רינדור טבלה, CRUD (כולל עריכת זן), עמוד פרטי זן, pharmacies |
 | 1180–1310 | חיפוש, סטטיסטיקות, Chart.js |
 | 1310–1419 | טאבים, מודל, שיתוף, מחיקה, dark mode, init |
 
 ## 4. Components (מזהים) & Critical Flows
-**רכיבים:** COMP-001 Shell/CSS · 002 Tabs (`switchTab`) · 003 DataLayer (`strains`, `saveData`, `loadData`, `loadFromLocalStorage`) · 004 Table (`renderStrains`) · 005 Firebase (`initializeFirebase`, `signInAnonymously`, `migrateLegacyDataIfNeeded`, `attachCloudListener`, `sanitizeCloudData`, `handleFirebaseError`) · 006 Extension bridge · 007 Stats (`renderStats` + guard) · 008 Search (`performSearch`) · 009 Modal/form (`addStrain`/`editStrain`) · 010 Import/Export · 011 SyncStatus.
+**רכיבים:** COMP-001 Shell/CSS · 002 Tabs (`switchTab`) · 003 DataLayer (`strains`, `saveData`, `loadData`, `loadFromLocalStorage`) · 004 Table (`renderStrains`) · 005 Firebase (`initializeFirebase`, `signInAnonymously`, `migrateLegacyDataIfNeeded`, `attachCloudListener`, `sanitizeCloudData`, `handleFirebaseError`) · 006 Extension bridge · 007 Stats (`renderStats` + guard) · 008 Search (`performSearch`) · 009 Modal/form (`addStrain`/`editStrain`) · 010 Import/Export · 011 SyncStatus · 012 Strain detail page (`viewStrain` → hash route `#/strain/{id}`, עמוד מלא פר-זן, deep link, נפתח/נסגר גם ב-back של הדפדפן).
 
 **זרימות קריטיות:**
 1. **הוספה/עריכה:** form → `addStrain()` (או `editStrain()` למילוי) → `strains.push`/עדכון לפי `id` → `saveData()` (local + cloud `set()` מלא עם מנגנון מנע-דריסה) → `renderStrains()`.
