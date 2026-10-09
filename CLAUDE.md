@@ -32,6 +32,7 @@
 
 ## 4. Components (מזהים) & Critical Flows
 **רכיבים:** COMP-001 Shell/CSS · 002 Tabs (`switchTab`) · 003 DataLayer (`strains`, `saveData`, `loadData`, `loadFromLocalStorage`) · 004 Table + Cards (`renderStrains` — טבלה/כרטיסים לפי `canabisViewMode`, persist) · 005 Firebase (`initializeFirebase`, `signInAnonymously`, `migrateLegacyDataIfNeeded`, `attachCloudListener`, `sanitizeCloudData`, `handleFirebaseError`) · 006 Extension bridge · 007 Stats (`renderStats` + guard) · 008 Search (`performSearch`) · 009 Modal/form (`addStrain`/`editStrain`) · 010 Import/Export · 011 SyncStatus · 012 Strain detail page (`viewStrain` → hash route `#/strain/{id}`, עמוד מלא פר-זן, deep link, נפתח/נסגר גם ב-back של הדפדפן, **ניווט הבא/הקודם** `gotoNextStrain`/`gotoPrevStrain` + מקלדת) · 013 Sample catalog (`SAMPLE_DATA` — 60 זנים אמיתיים Leafly).
+**רכיבים חדשים (2026-10-09):** 014 Catalog toolbar (סינון/מיון/חיפוש מהיר — `setCatalogFilter`/`setCatalogSort`/`setCatalogSearch`, persist) · 015 Favorites (`toggleFavorite` — כרטיסים/טבלה/עמוד פרטים/סינון fav, מסונכרן) · 016 Compare (`toggleCompare`/`setCompareSlot` — עד-3 זנים, פאנל overlay) · 017 Usage log (`toggleUsageLog`/`saveDoseEntry`/`deleteDoseEntry` — `canabisDoses` מקומי בלבד + גרף 14 ימים) · 018 Dosage calc (`renderDosageCalc`/`runDosageCalc` — בעמוד הפרטים, הערכה בלבד) · 019 Advanced charts (`thcScatterChart` פיזור THC×CBD לפי אפיון + `terpenesChart` top-8) · 020 Tags (`#strainTags` בטופס, נכלל בסינון מהיר, עובר ביבוא/ענן/bridge) · 021 PWA (manifest.json + sw.js, רישום ב-init; SW מקשר רק app-shell + CDN ברשימת היתר, אף פעם לא RTDB).
 
 **זרימות קריטיות:**
 1. **הוספה/עריכה:** form → `addStrain()` (או `editStrain()` למילוי) → `strains.push`/עדכון לפי `id` → `saveData()` (local + cloud `set()` מלא עם מנגנון מנע-דריסה) → `renderStrains()`.
@@ -40,7 +41,8 @@
 4. **מחיקה/ניקוי:** `deleteStrain`/`clearAllData` → `expectCloudShrink=true` (עוקף את מנגנון המנע-דריסה) → במחיקה גורפת גם גיבוי JSON אוטומטי לפני ה-confirm.
 
 ## 5. Data Model (strain)
-`id (Date.now) · name* · type ("indica"|"sativa"|"hybrid")* · potency · price · dosage · thc (0–100) · cbd (0–100) · country · importer · terpenes · effects · rating (0–5, clamped) · pharmacies[] · notes · createdAt (ISO) · updatedAt? (ISO — רק לאחר עריכה)`
+`id (Date.now) · name* · type ("indica"|"sativa"|"hybrid")* · potency · price · dosage · thc (0–100) · cbd (0–100) · country · importer · terpenes · effects · rating (0–5, clamped) · pharmacies[] · notes · favorite (0|1) · tags[] (מחרוזות) · createdAt (ISO) · updatedAt? (ISO — רק לאחר עריכה)`
+- **הרחבות 2026-10-09:** `favorite`/`tags` עוברים normalize גם ביבוא וגם ב-`sanitizeCloudData` (היעדרם = 0/[] — אין breaking). תוספים ל-localStorage: `canabisDoses` (יומן שימוש, מקומי בלבד), `canabisFilter`, `canabisSort`, `canabisViewMode`. PWA: `public/manifest.json` + `public/sw.js` (רישום ב-init; SW מקשר app-shell + CDN מותרים בלבד).
 - **Firebase paths:** `strains/{authUid}` (מערך; uid מ-Firebase Auth האנונימי). `strains/{userKey}` ישן — מועבר אוטומטית ונמחק. `connection_test` — בוטל.
 - **ולידציית ענן ממומשת** (`sanitizeCloudData`): name/type מחרוזות תקינות, מספרים, clamp ל-rating, סינון pharmacies; פריט פגום = דילוג. גם ביבוא: whitelist ל-type + clamp ל-rating.
 
