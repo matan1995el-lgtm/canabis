@@ -691,6 +691,7 @@
     <button class="tab-btn" onclick="switchTab('search')" role="tab">🔍 חיפוש</button>
     <button class="tab-btn" onclick="toggleCompare()" role="tab">⚖️ השוואה</button>
     <button class="tab-btn" onclick="toggleUsageLog()" role="tab">📓 יומן שימוש</button>
+    <button class="tab-btn" onclick="switchTab('about')" role="tab">ℹ️ אודות ואמון</button>
     <button class="tab-btn" onclick="switchTab('settings')" role="tab">⚙️ הגדרות</button>
     </div>
 
@@ -735,6 +736,54 @@
     </div>
 
     <!-- SETTINGS TAB -->
+    <div id="aboutTab" class="tab-content" role="tabpanel" aria-hidden="true">
+      <div class="settings-grid">
+        <section class="card settings-card" style="grid-column:1/-1">
+          <h3>ℹ️ אודות</h3>
+          <p class="settings-hint">קטלוג זני קנאביס רפואי אישי — כלי עבודה של אזרח עם רישיון יוא"פ (לא מקור מידע מוסדי). הקטלוג מבוסס על 60 זנים ממקורות מוסמכים (Leafly 2026) ועל ניסיון אישי לצד בדיקת מקור פר-זן.</p>
+          <ul class="settings-hint" style="padding-inline-start:20px; margin:0;">
+            <li>כל זן יכול לכלול מקור, תאריך בדיקה, ושם הבודק</li>
+            <li>כל עמוד זן מציג הצהרת אמינות בראש (אם מולא)</li>
+            <li>אין במערכת ייעוץ רפואי — היא מסייעת בתיעוד ובהשוואה בלבד</li>
+          </ul>
+        </section>
+
+        <section class="card settings-card">
+          <h3>🏛️ מקורות רשמיים</h3>
+          <ul class="settings-hint" style="padding-inline-start:20px; margin:0;">
+            <li><a href="https://www.gov.il/he/departments/units/medical_cannabis_research_and_regulation" target="_blank" rel="noopener noreferrer">אגף הקנאביס הרפואי · gov.il</a></li>
+            <li><a href="https://www.health.gov.il" target="_blank" rel="noopener noreferrer">משרד הבריאות (health.gov.il)</a></li>
+            <li><a href="https://www.leafly.com" target="_blank" rel="noopener noreferrer">מדע קנאביס · Leafly</a></li>
+          </ul>
+        </section>
+
+        <section class="card settings-card">
+          <h3>📜 הצהרת אמון (E-E-A-T)</h3>
+          <ul class="settings-hint" style="padding-inline-start:20px; margin:0;">
+            <li>הנתונים הטכניים מבוססים על מקורות ידועים (Leafly, יוא"פ)</li>
+            <li>כל זן יכול לכלול מקור אחד לפחות + תאריך בדיקה עדכני</li>
+            <li>ההשוואות מראות מדדים טכניים בלבד — אין המלצות רפואיות או ניסיון להתחזות לרופא</li>
+            <li>הפרטים משקפים ניסיון אישי לצד בדיקת עדכניות</li>
+          </ul>
+        </section>
+
+        <section class="card settings-card">
+          <h3>🔍 כך אני בודק זן</h3>
+          <ol class="settings-hint" style="padding-inline-start:20px; margin:0;">
+            <li>מוצא שם הזן ב-Leafly (אפיון THC/CBD + טרפנים)</li>
+            <li>מוצא בפורטל המדינה (gov.il) את הנוהל הרשמי או קטגוריית יוא"פ</li>
+            <li>מתעד בטופס הזן: מקור + תאריך בדיקה + שם הבודק</li>
+            <li>לאחר הבדיקה — מעדכן תמונות, תגיות והערות</li>
+          </ol>
+        </section>
+
+        <section class="card settings-card">
+          <h3>⚕️ הצהרה רפואית</h3>
+          <p class="settings-hint">המערכת אינה מהווה ייעוץ רפואי. שינויים בטיפול דורשים אישור הרופא המטפל בהתאם לנוהלי ה-יוא"פ. מידע על זנים מבוסס על Leafly ומקורות ממשלתיים בלבד.</p>
+        </section>
+      </div>
+    </div>
+
     <div id="settingsTab" class="tab-content" role="tabpanel" aria-hidden="true">
       <div class="settings-grid">
         <section class="card settings-card">
@@ -921,6 +970,22 @@
         <div class="form-group">
           <label for="strainTags">תגיות (מופרדות ב-. ,)</label>
           <input id="strainTags" type="text" placeholder="כאבים, שינה, יומיומי">
+        </div>
+
+        <div class="form-group">
+          <label for="strainSource">מקור אמינות (כתובת או שם, אופציונלי)</label>
+          <input id="strainSource" type="text" placeholder="gov.il · מנוהל תכשירים · Leafly">
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="strainSourceCheckedAt">תאריך בדיקת מקור</label>
+            <input id="strainSourceCheckedAt" type="date">
+          </div>
+          <div class="form-group">
+            <label for="strainVerifiedBy">נבדק/אושר ע"י</label>
+            <input id="strainVerifiedBy" type="text" placeholder="שם הבודק (אופציונלי)">
+          </div>
         </div>
 
         <div class="form-group">
@@ -1470,6 +1535,10 @@
           notes: typeof item.notes === 'string' ? item.notes : '',
           favorite: (Number(item.favorite) === 1) ? 1 : 0,
           tags: Array.isArray(item.tags) ? item.tags.filter(t => typeof t === 'string' && t.trim()) : [],
+          photos: Array.isArray(item.photos) ? item.photos.filter(p => typeof p === 'string' && /^data:image\//.test(p)).slice(0, 4) : [],
+          source: typeof item.source === 'string' ? item.source.trim() : '',
+          sourceCheckedAt: (typeof item.sourceCheckedAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.sourceCheckedAt)) ? item.sourceCheckedAt : '',
+          verifiedBy: typeof item.verifiedBy === 'string' ? item.verifiedBy.trim() : '',
           createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString()
         });
         // Firebase rejects undefined values — add updatedAt only when it actually exists
@@ -1586,6 +1655,17 @@
         currentPharmacies = [...strain.pharmacies];
         renderPharmacies();
       }
+
+      // Upgrade 5: photos from the bridge (staged into the form)
+      if (typeof photoStaging !== 'undefined' && Array.isArray(strain.photos) && strain.photos.length) {
+        photoStaging = strain.photos.filter(p => typeof p === 'string' && /^data:image\//.test(p)).slice(0, 4);
+        renderPhotoStaging();
+      }
+
+      // A-E-E-A-T: source fields from the bridge
+      if (strain.source && document.getElementById('strainSource')) document.getElementById('strainSource').value = strain.source;
+      if (strain.sourceCheckedAt && document.getElementById('strainSourceCheckedAt')) document.getElementById('strainSourceCheckedAt').value = strain.sourceCheckedAt;
+      if (strain.verifiedBy && document.getElementById('strainVerifiedBy')) document.getElementById('strainVerifiedBy').value = strain.verifiedBy;
     }
 
     // Initialize Firebase when page loads
@@ -1747,6 +1827,10 @@
               rating: Math.max(0, Math.min(5, Number(item.rating) || 0)),
               pharmacies: Array.isArray(item.pharmacies) ? item.pharmacies : (item.pharmacies ? [item.pharmacies] : []),
               notes: item.notes || '',
+              photos: Array.isArray(item.photos) ? item.photos.filter(p => typeof p === 'string' && /^data:image\//.test(p)).slice(0, 4) : [],
+              source: typeof item.source === 'string' ? item.source.trim() : '',
+              sourceCheckedAt: (typeof item.sourceCheckedAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.sourceCheckedAt)) ? item.sourceCheckedAt : '',
+              verifiedBy: typeof item.verifiedBy === 'string' ? item.verifiedBy.trim() : '',
               createdAt: item.createdAt || new Date().toISOString()
             };
 
@@ -2034,6 +2118,9 @@
           ? (strainTagsDraft() || [])
           : (((document.getElementById('strainTags') && document.getElementById('strainTags').value) || '').split(',').map(t => t.trim()).filter(Boolean)),
         photos: (typeof photoStaging !== 'undefined') ? photoStaging.slice() : [],
+        source: document.getElementById('strainSource') ? document.getElementById('strainSource').value.trim() : '',
+        sourceCheckedAt: (document.getElementById('strainSourceCheckedAt') && document.getElementById('strainSourceCheckedAt').value) ? document.getElementById('strainSourceCheckedAt').value : '',
+        verifiedBy: document.getElementById('strainVerifiedBy') ? document.getElementById('strainVerifiedBy').value.trim() : '',
         createdAt: new Date().toISOString()
       };
       if(editingId !== null){
@@ -2046,6 +2133,9 @@
           // PRESERVE on edit: fields not form-editable (regression guard)
           strain.favorite = strains[idx].favorite;
           strain.photos = (typeof photoStaging !== 'undefined' && photoStaging.length) ? photoStaging.slice() : (strains[idx].photos || []);
+          strain.source = document.getElementById('strainSource') ? document.getElementById('strainSource').value.trim() : (strains[idx].source || '');
+          strain.sourceCheckedAt = (document.getElementById('strainSourceCheckedAt') && document.getElementById('strainSourceCheckedAt').value) ? document.getElementById('strainSourceCheckedAt').value : (strains[idx].sourceCheckedAt || '');
+          strain.verifiedBy = document.getElementById('strainVerifiedBy') ? document.getElementById('strainVerifiedBy').value.trim() : (strains[idx].verifiedBy || '');
           strains[idx] = strain;
           saveData();
           renderStrains();
@@ -2102,6 +2192,12 @@
       // photo staging from existing photos (upgrade 5)
       photoStaging = Array.isArray(s.photos) ? s.photos.slice() : [];
       renderPhotoStaging();
+      const srcEl = document.getElementById('strainSource');
+      if(srcEl) srcEl.value = s.source || '';
+      const srcChkEl = document.getElementById('strainSourceCheckedAt');
+      if(srcChkEl) srcChkEl.value = s.sourceCheckedAt || '';
+      const vbEl = document.getElementById('strainVerifiedBy');
+      if(vbEl) vbEl.value = s.verifiedBy || '';
       renderPharmacies();
       editingId = s.id;
       const title = document.querySelector('#addStrainModal .modal-header h2');
@@ -2293,6 +2389,28 @@
           ${terpenes.length
             ? '<div class="sp-tags">' + terpenes.map(t => '<span class="sp-tag">' + escapeHtml(t) + '</span>').join('') + '</div>'
             : '<span class="sp-empty">לא תועדו טרפנים</span>'}
+        </section>
+
+        <section class="sp-section">
+          <h3>✅ אמינות ומקור</h3>
+          ${(function(){
+            const has = s.source || s.sourceCheckedAt || s.verifiedBy;
+            if(!has) return '<span class="sp-empty">מידע האמינות עבור זן זה לא מולא — ניתן להוסיף דרך עריכה</span>';
+            const rows = [];
+            if(s.source){
+              const isUrl = /^https?:\/\//i.test(s.source);
+              rows.push('<div><span class="sp-k">מקור</span><span class="sp-v">' + (isUrl
+                ? '<a href="' + escapeHtml(s.source) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(s.source) + '</a>'
+                : escapeHtml(s.source)) + '</span></div>');
+            }
+            if(s.sourceCheckedAt){
+              rows.push('<div><span class="sp-k">בדיקת מקור</span><span class="sp-v">' + escapeHtml(fmtDate(s.sourceCheckedAt)) + '</span></div>');
+            }
+            if(s.verifiedBy){
+              rows.push('<div><span class="sp-k">נבדק ע"י</span><span class="sp-v">' + escapeHtml(s.verifiedBy) + '</span></div>');
+            }
+            return '<div class="sp-kv">' + rows.join('') + '</div><p class="sp-text sp-empty">מידע זה ניתן לתיעוד ידני — אינו ייעוץ רפואי.</p>';
+          })()}
         </section>
 
         <section class="sp-section">
