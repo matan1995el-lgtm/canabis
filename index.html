@@ -474,6 +474,32 @@
       position:relative; overflow:hidden;
     }
     .strain-card-sfc::before{ content:''; position:absolute; top:0; inset-inline:0; height:4px; }
+    .sfc-photo{ width:100%; height:170px; object-fit:cover; border-radius:12px; border:1px solid var(--border); margin:-4px 0 0; }
+    .sfc-photos-row{ display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; scrollbar-width:thin; }
+    .sfc-photos-row img{ width:110px; height:80px; object-fit:cover; border-radius:8px; border:1px solid var(--border); cursor:zoom-in; }
+    .sp-photo{ width:100%; max-height:340px; object-fit:contain; border-radius:12px; border:1px solid var(--border); margin-top:10px; }
+    .photo-toolbar{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .photo-strip{ display:flex; gap:8px; overflow-x:auto; padding:6px 0; }
+    .photo-strip img{ width:120px; height:90px; object-fit:cover; border-radius:8px; border:1px solid var(--border); cursor:zoom-in; }
+    .photo-remove-x{ position:relative; }
+    .photo-remove-x button{ position:absolute; top:-6px; inset-inline-end:-6px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:0.8rem; line-height:1; }
+    /* Split view (upgrade 10, desktop only) */
+    .split-view-grid{ display:grid; grid-template-columns:minmax(340px, 1fr) minmax(0, 1.1fr); gap:18px; align-items:start; }
+    .split-cat{ max-height:calc(100vh - 160px); overflow-y:auto; }
+    .split-pane{ position:sticky; top:16px; }
+    .split-toggle-row{ display:flex; justify-content:flex-end; margin-bottom:10px; }
+    @media (max-width:1023px){ .split-view-grid{ grid-template-columns:1fr; } .split-pane{ position:static; } }
+    /* Print (upgrade 11) */
+    @media print{
+      .tab-btn, .btn, .view-toggle, .catalog-toolbar, .sync-status, .sfc-actions, .row-actions,
+      #addStrainModal, .strain-page-nav, .strain-page-actions, .usage-panel, .dc-row button, #toggleDarkRow { display:none !important; }
+      body{ background:#fff !important; color:#111 !important; }
+      .card, .strain-card-sfc, .sp-hero, .sp-section{ box-shadow:none !important; border:1px solid #bbb !important; break-inside:avoid; }
+      .cards-grid{ grid-template-columns:repeat(2, 1fr) !important; }
+      .sfc-photo{ max-height:150px; }
+      .usage-panel{ position:static !important; display:block !important; }
+      .sfc-name a, .sp-name{ color:#111 !important; }
+    }
     .card-sfc-indica::before{ background:linear-gradient(90deg,#7e57c2,#4527a0); }
     .card-sfc-sativa::before{ background:linear-gradient(90deg,#ffb300,#f57c00); }
     .card-sfc-hybrid::before{ background:linear-gradient(90deg,var(--primary),var(--primary-dark)); }
@@ -844,9 +870,7 @@
               <option value="מאוזנת">מאוזנת</option>
               <option value="גבוהה">גבוהה</option>
             </select>
-          </div>
-
-          <div class="form-group">
+          </div>          <div class="form-group">
             <label for="strainPrice">מחיר (₪)</label>
             <input id="strainPrice" type="number" step="1" min="0" placeholder="350">
           </div>
@@ -897,6 +921,13 @@
         <div class="form-group">
           <label for="strainTags">תגיות (מופרדות ב-. ,)</label>
           <input id="strainTags" type="text" placeholder="כאבים, שינה, יומיומי">
+        </div>
+
+        <div class="form-group">
+          <label for="strainPhotoInput">תמונות זן (עד 4)</label>
+          <input id="strainPhotoInput" type="file" accept="image/*" multiple style="display:none" onchange="strainPhotoInputHandler(event)">
+          <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('strainPhotoInput').click()">📷 הוסף תמונות</button>
+          <div class="photo-staging" id="photoStagingBox" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
         </div>
 
         <div class="form-group">
@@ -2002,6 +2033,7 @@
         tags: (typeof strainTagsDraft === 'function')
           ? (strainTagsDraft() || [])
           : (((document.getElementById('strainTags') && document.getElementById('strainTags').value) || '').split(',').map(t => t.trim()).filter(Boolean)),
+        photos: (typeof photoStaging !== 'undefined') ? photoStaging.slice() : [],
         createdAt: new Date().toISOString()
       };
       if(editingId !== null){
@@ -2011,6 +2043,9 @@
           strain.id = strains[idx].id;
           strain.createdAt = strains[idx].createdAt;
           strain.updatedAt = new Date().toISOString();
+          // PRESERVE on edit: fields not form-editable (regression guard)
+          strain.favorite = strains[idx].favorite;
+          strain.photos = (typeof photoStaging !== 'undefined' && photoStaging.length) ? photoStaging.slice() : (strains[idx].photos || []);
           strains[idx] = strain;
           saveData();
           renderStrains();
@@ -2064,6 +2099,9 @@
       document.getElementById('strainEffects').value = s.effects || '';
       document.getElementById('strainNotes').value = s.notes || '';
       currentPharmacies = Array.isArray(s.pharmacies) ? [...s.pharmacies] : [];
+      // photo staging from existing photos (upgrade 5)
+      photoStaging = Array.isArray(s.photos) ? s.photos.slice() : [];
+      renderPhotoStaging();
       renderPharmacies();
       editingId = s.id;
       const title = document.querySelector('#addStrainModal .modal-header h2');
@@ -2073,16 +2111,16 @@
 
     function deleteStrain(index){
       if(index < 0 || index >= strains.length) return;
-      if(confirm(`למחוק את הזן "${strains[index].name}"?`)){
+      if(!confirm(`למחוק את הזן "${strains[index].name}"?`)) return;
+        pushStrainHistory(strains[index].id); // upgrade 12: snapshot before destructive op
         expectCloudShrink = true; // intentional removal — skip the anti-overwrite guard
         const removedId = strains[index].id;
-        const removed = strains.splice(index,1);
+        const removed = strains.splice(index, 1);
         saveData();
         renderStrains();
         // If the deleted strain's own page is open, close it
         if(String(detailStrainId) === String(removedId)) hideStrainPage();
         showNotification(`🗑️ הזן הוסר: ${removed[0].name}`);
-      }
     }
 
     /* ========== STRAIN DETAIL PAGE (2026-10-08): hash-routed full page per strain ========== */
@@ -2206,6 +2244,7 @@
             <button class="btn btn-small ${spFav ? 'btn-fav-on' : ''}" onclick="toggleFavorite(${idx},${JSON.stringify(String(s.id))})" aria-pressed="${spFav}" title="מועדפים">${spFav ? '★ מועדף' : '☆ הוסף למועדפים'}</button>
             <button class="btn btn-small" onclick="copyStrainLink()" title="העתקת קישור לעמוד זה">📋 קישור</button>
             <button class="btn btn-small" onclick="shareStrainWhatsApp()" title="שיתוף הזן ב-WhatsApp">📱 שתף</button>
+            <button class="btn btn-small" onclick="window.print()" title="הדפסה / ייצוא PDF של העמוד">🖨️ PDF</button>
             <button class="btn btn-small" onclick="editStrain(${idx})">✏️ עריכה</button>
             <button class="btn btn-small btn-danger" onclick="deleteStrain(${idx})">🗑️ מחיקה</button>
           </div>
@@ -2250,6 +2289,13 @@
           ${terpenes.length
             ? '<div class="sp-tags">' + terpenes.map(t => '<span class="sp-tag">' + escapeHtml(t) + '</span>').join('') + '</div>'
             : '<span class="sp-empty">לא תועדו טרפנים</span>'}
+        </section>
+
+        <section class="sp-section">
+          <h3>🖼️ תמונות</h3>
+          ${(Array.isArray(s.photos) && s.photos.length
+            ? '<div class="sfc-photos-row sp-photos">' + s.photos.map(p => '<img src="' + escapeHtml(p) + '" alt="תמונת ' + escapeHtml(s.name || 'זן') + '" loading="lazy">').join('') + '</div>'
+            : '<span class="sp-empty">אין תמונות — ניתן להוסיף דרך עריכה</span>')}
         </section>
 
         <section class="sp-section">
@@ -2476,6 +2522,86 @@
       document.body.style.overflow = isOpen ? 'hidden' : '';
       if(isOpen) renderComparePickers();
     }
+
+    /* ========== PHOTO GALLERY (upgrade 5): local dataURL photos per strain ========== */
+    // photos[] lives inside each strain; normalized/clamped in sanitize + import + bridge.
+    let changeHistories = {}; // upgrade 12 — simple in-memory history per strain id
+    function pushStrainHistory(id){
+      try{ localStorage.setItem('canabisUndo', JSON.stringify({ id: String(id), snapshot: strains.slice(), at: new Date().toISOString() })); }catch(e){}
+    }
+    function canUndoLastChange(){
+      try{ const raw = localStorage.getItem('canabisUndo'); const u = raw ? JSON.parse(raw) : null; return u && Array.isArray(u.snapshot); }
+      catch(e){ return false; }
+    }
+    function undoLastChange(){
+      let u = null;
+      try{ u = JSON.parse(localStorage.getItem('canabisUndo') || 'null'); }catch(e){}
+      if(!u || !Array.isArray(u.snapshot)){ showNotification('ℹ️ אין שינוי לביטול'); return; }
+      expectCloudShrink = true; // intentional restore
+      strains = u.snapshot.map(s => ({ ...s }));
+      saveData();
+      renderStrains();
+      try{ localStorage.removeItem('canabisUndo'); }catch(e){}
+      showNotification('↩️ שוחזר מצב קודם');
+    }
+
+    // Resize to ≈640px wide JPEG dataURL — keeps a strain payload < ~120 KB.
+    function normalizePhotoDataUrl(dataUrl){
+      return new Promise((resolve) => {
+        try{
+          if(typeof dataUrl !== 'string' || !/^data:image\/(png|jpeg|jpg|webp);base64,/.test(dataUrl) || dataUrl.length > 4_000_000){
+            resolve(null); return;
+          }
+          const img = new Image();
+          img.onload = () => {
+            try{
+              const maxW = 640, maxH = 640;
+              let { width: w, height: h } = img;
+              const scale = Math.min(1, maxW / w, maxH / h);
+              w = Math.max(1, Math.round(w * scale)); h = Math.max(1, Math.round(h * scale));
+              const canvas = document.createElement('canvas');
+              canvas.width = w; canvas.height = h;
+              canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+              resolve(canvas.toDataURL('image/jpeg', 0.72));
+            }catch(e){ resolve(null); }
+          };
+          img.onerror = () => resolve(null);
+          img.src = dataUrl;
+        }catch(e){ resolve(null); }
+      });
+    }
+
+    // Called from the add/edit form (file input) — stores into a staging buffer.
+    let photoStaging = [];
+    function strainPhotoInputHandler(event){
+      const files = event.target && event.target.files ? Array.from(event.target.files) : [];
+      if(!files.length) return;
+      (async () => {
+        for(const f of files.slice(0, 4)){
+          const dataUrl = await new Promise((res) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result);
+            r.onerror = () => res(null);
+            r.readAsDataURL(f);
+          });
+          const small = await normalizePhotoDataUrl(dataUrl);
+          if(small && photoStaging.length < 4){ photoStaging.push(small); }
+        }
+        renderPhotoStaging();
+        event.target.value = '';
+      })();
+    }
+    function renderPhotoStaging(){
+      const box = document.getElementById('photoStagingBox');
+      if(!box) return;
+      if(photoStaging.length === 0){ box.innerHTML = ''; return; }
+      box.innerHTML = photoStaging.map((p, i) => `
+        <div class="photo-remove-x"><img src="${p}" alt="תמונה ${i + 1}"><button type="button" onclick="removeStagedPhoto(${i})" aria-label="הסר תמונה">×</button></div>
+      `).join('');
+    }
+    function removeStagedPhoto(i){ photoStaging.splice(i, 1); renderPhotoStaging(); }
+    function photoCountOf(s){ return Array.isArray(s && s.photos) ? s.photos.length : 0; }
+    function firstPhotoOf(s){ return photoCountOf(s) ? s.photos[0] : null; }
 
     function renderComparePickers(){
       const c = document.getElementById('comparePickers');
@@ -2740,6 +2866,8 @@
       currentPharmacies = [];
       renderPharmacies();
       editingId = null;
+      photoStaging = [];            // upgrade 5: clear staged photos on close
+      renderPhotoStaging();
       const title = document.querySelector('#addStrainModal .modal-header h2');
       if(title) title.textContent = '➕ הוסף זן חדש';
       document.body.style.overflow='';
