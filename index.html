@@ -2958,7 +2958,7 @@
         tc.setAttribute('aria-hidden','true');
       });
       document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active'));
-      const tabId = (tabName === 'manage') ? 'manageTab' : (tabName === 'stats' ? 'statsTab' : (tabName === 'search' ? 'searchTab' : 'settingsTab'));
+      const tabId = (tabName === 'manage') ? 'manageTab' : (tabName === 'stats' ? 'statsTab' : (tabName === 'search' ? 'searchTab' : (tabName === 'about' ? 'aboutTab' : 'settingsTab')));
       const tab = document.getElementById(tabId);
       if(tab){
         tab.classList.add('active');
