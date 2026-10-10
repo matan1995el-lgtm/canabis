@@ -483,12 +483,12 @@
     .photo-strip img{ width:120px; height:90px; object-fit:cover; border-radius:8px; border:1px solid var(--border); cursor:zoom-in; }
     .photo-remove-x{ position:relative; }
     .photo-remove-x button{ position:absolute; top:-6px; inset-inline-end:-6px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:0.8rem; line-height:1; }
-    /* Split view (upgrade 10, desktop only) */
-    .split-view-grid{ display:grid; grid-template-columns:minmax(340px, 1fr) minmax(0, 1.1fr); gap:18px; align-items:start; }
-    .split-cat{ max-height:calc(100vh - 160px); overflow-y:auto; }
-    .split-pane{ position:sticky; top:16px; }
-    .split-toggle-row{ display:flex; justify-content:flex-end; margin-bottom:10px; }
-    @media (max-width:1023px){ .split-view-grid{ grid-template-columns:1fr; } .split-pane{ position:static; } }
+    /* Split view (upgrade 10, desktop only): the strain page becomes a side panel next to the live catalog */
+    @media (min-width:1024px){
+      .strain-page.split-mode{ position:fixed; inset-block:0; inset-inline-start:0; inset-inline-end:auto; width:46%; max-width:620px; z-index:9000; background:var(--bg-main); overflow-y:auto; box-shadow:-4px 0 24px rgba(0,0,0,.18); }
+      .strain-page.split-mode .strain-page-inner{ max-width:none; padding:22px 22px 64px; }
+      body.split-active{ overflow:hidden; }
+    }
     /* Print (upgrade 11) */
     @media print{
       .tab-btn, .btn, .view-toggle, .catalog-toolbar, .sync-status, .sfc-actions, .row-actions,
@@ -2178,8 +2178,10 @@
       renderStrainPage(s);
       const page = document.getElementById('strainDetailPage');
       page.classList.add('active');
+      page.classList.add('split-mode');           // upgrade 10: side panel on desktop
       page.setAttribute('aria-hidden','false');
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('split-active'); // lock page scroll; the pane scrolls itself
       page.scrollTop = 0;
     }
 
@@ -2188,8 +2190,10 @@
       const page = document.getElementById('strainDetailPage');
       if(!page) return;
       page.classList.remove('active');
+      page.classList.remove('split-mode');
       page.setAttribute('aria-hidden','true');
       document.body.style.overflow = '';
+      document.body.classList.remove('split-active');
     }
 
     function closeStrainPage(){
