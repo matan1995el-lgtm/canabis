@@ -41,7 +41,9 @@
 4. **מחיקה/ניקוי:** `deleteStrain`/`clearAllData` → `expectCloudShrink=true` (עוקף את מנגנון המנע-דריסה) → במחיקה גורפת גם גיבוי JSON אוטומטי לפני ה-confirm.
 
 ## 5. Data Model (strain)
-`id (Date.now) · name* · type ("indica"|"sativa"|"hybrid")* · potency · price · dosage · thc (0–100) · cbd (0–100) · country · importer · terpenes · effects · rating (0–5, clamped) · pharmacies[] · notes · favorite (0|1) · tags[] (מחרוזות) · createdAt (ISO) · updatedAt? (ISO — רק לאחר עריכה)`
+`id (Date.now) · name* · type ("indica"|"sativa"|"hybrid")* · potency · price · dosage · thc (0–100) · cbd (0–100) · country · importer · terpenes · effects · rating (0–5, clamped) · pharmacies[] · notes · favorite (0|1) · tags[] (מחרוזות) · photos[] (dataURL JPEG ~640px, מכסה 4/זן — שדרוג 5) · createdAt (ISO) · updatedAt? (ISO — רק לאחר עריכה)`
+
+**שדרוגים 2026-10-10:** תמונות פר-זן (staging `photoStaging` בטופס → `photos[]`, שמורות בעריכה ומאופסות בסגירת מודל) · ביטול מחיקה (`canabisUndo` snapshot ב-localStorage + `undoLastChange`) · ייצוא PDF דרך `window.print()` + `@media print` (ללא CDN חדש) · split-view CSS למסכים 1024px+ (`split-view-grid`).
 - **הרחבות 2026-10-09:** `favorite`/`tags` עוברים normalize גם ביבוא וגם ב-`sanitizeCloudData` (היעדרם = 0/[] — אין breaking). תוספים ל-localStorage: `canabisDoses` (יומן שימוש, מקומי בלבד), `canabisFilter`, `canabisSort`, `canabisViewMode`. PWA: `public/manifest.json` + `public/sw.js` (רישום ב-init; SW מקשר app-shell + CDN מותרים בלבד).
 - **Firebase paths:** `strains/{authUid}` (מערך; uid מ-Firebase Auth האנונימי). `strains/{userKey}` ישן — מועבר אוטומטית ונמחק. `connection_test` — בוטל.
 - **ולידציית ענן ממומשת** (`sanitizeCloudData`): name/type מחרוזות תקינות, מספרים, clamp ל-rating, סינון pharmacies; פריט פגום = דילוג. גם ביבוא: whitelist ל-type + clamp ל-rating.
